@@ -1,274 +1,224 @@
 # 🚀 Chalee-Truffle
 
-一个基于 Truffle 框架的智能合约开发项目，包含智能合约部署、测试和前端 DApp 交互界面。
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.20-blue.svg)](https://soliditylang.org/)
+[![Truffle](https://img.shields.io/badge/Truffle-Latest-orange.svg)](https://trufflesuite.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 📋 项目概述
+一个轻量级的以太坊DApp开发启动模板，基于Truffle框架，提供智能合约开发、部署、测试以及交互式前端界面。
 
-Chalee-Truffle 是一个完整的以太坊 DApp 开发项目，包含：
+<div align="center">
+  <img src="https://ethereum.org/static/28214bb68eb5445dcb063a72535bc90c/9019e/hero.png" alt="Ethereum DApp" width="400"/>
+</div>
 
-- ✅ 智能合约开发与部署
-- ✅ 完整的测试套件
-- ✅ 现代化的前端交互界面
-- ✅ MetaMask 钱包集成
-- ✅ 本地开发环境配置
+## ✨ 主要特性
 
-## 🎯 功能特性
+- **简单高效** - 最小化的合约设计，专注于功能演示
+- **完整工作流** - 从合约开发到前端交互的完整实现
+- **现代开发栈** - 使用Truffle、Ethers.js和Web3技术栈
+- **友好文档** - 详细的操作指南和API文档
+- **轻松扩展** - 基础架构便于添加新功能
 
-### 智能合约功能
-- **信息存储**：存储和检索用户姓名和年龄信息
-- **问候功能**：简单的 sayHi() 函数演示
-- **事件监听**：Instructor 事件的触发和监听
+## 📋 核心功能
 
-### 前端功能
-- **钱包连接**：MetaMask 钱包无缝集成
-- **合约交互**：直观的智能合约调用界面
-- **实时反馈**：交易状态和结果的实时显示
-- **事件监听**：区块链事件的实时监控
-- **科技感UI**：现代化的渐变和动画效果
+### 📱 前端
+
+- MetaMask钱包集成
+- 实时合约状态显示
+- 事件监听和响应
+- 响应式设计，适配多种设备
+
+### 📝 智能合约
+
+- 基础数据存储与检索
+- 事件触发与监听
+- 纯函数和视图函数示例
 
 ## 🛠️ 技术栈
 
-### 后端/区块链
-- **Solidity** ^0.8.0 - 智能合约开发语言
-- **Truffle** - 开发框架和测试套件
-- **Ganache** - 本地区块链网络
-- **Web3.js** - 区块链交互库
-
-### 前端
-- **HTML5/CSS3** - 基础网页技术
-- **JavaScript (ES6+)** - 交互逻辑
-- **Ethers.js** - 以太坊JavaScript库
-- **jQuery** - DOM操作和事件处理
-
-## 📦 安装指南
-
-### 环境要求
-- Node.js >= 14.0.0
-- npm >= 6.0.0
-- Git
-
-### 1. 克隆仓库
-```bash
-git clone https://github.com/yourusername/chalee-truffle.git
-cd chalee-truffle
-```
-
-### 2. 安装依赖
-```bash
-# 安装 Truffle (全局)
-npm install -g truffle
-
-# 安装项目依赖
-npm install
-
-# 安装 Ganache CLI (可选)
-npm install -g ganache-cli
-```
-
-### 3. 安装 MetaMask
-前往 [MetaMask官网](https://metamask.io/) 下载并安装浏览器扩展
+- **Solidity** (v0.8.20) - 智能合约开发
+- **Truffle** - 开发、测试和部署框架
+- **Ethers.js** (v6.14.1) - 以太坊交互库
+- **jQuery** (v3.7.1) - DOM操作
+- **Web3** - 区块链交互基础设施
 
 ## 🚀 快速开始
 
-### 1. 启动本地区块链
-```bash
-# 使用 Ganache CLI
-ganache-cli
+### 前置条件
 
-# 或者使用 Truffle 内置开发网络
+- Node.js (>= 16.0.0)
+- npm 或 yarn
+- MetaMask 浏览器扩展
+- Ganache (本地区块链模拟器)
+
+### 安装步骤
+
+1. **克隆仓库**
+
+```bash
+git clone https://github.com/PrettyKing/chalee-truffle.git
+cd chalee-truffle
+```
+
+2. **安装依赖**
+
+```bash
+# 安装Truffle (如未安装)
+npm install -g truffle
+
+# 安装项目依赖
+cd web
+npm install
+```
+
+3. **启动本地区块链**
+
+```bash
+# 使用Truffle自带开发网络
 truffle develop
 ```
 
-### 2. 编译智能合约
+4. **编译和部署合约**
+
 ```bash
-truffle compile
+# 在truffle开发控制台中
+compile
+migrate
 ```
 
-### 3. 部署合约
+5. **启动前端应用**
+
 ```bash
-truffle migrate
-
-# 重新部署 (开发时使用)
-truffle migrate --reset
-```
-
-### 4. 运行前端
-```bash
-# 使用简单 HTTP 服务器
-python -m http.server 8000
-
-# 或使用 Node.js
+# 在项目根目录中
+cd web
 npx http-server
 
-# 然后访问 http://localhost:8000
+# 访问 http://localhost:8080
 ```
 
-### 5. 配置 MetaMask
-1. 连接到本地网络：
-   - 网络名称: `Ganache Local`
-   - RPC URL: `http://127.0.0.1:8545`
-   - 链ID: `1337`
-   - 货币符号: `ETH`
-
-2. 导入 Ganache 提供的私钥到 MetaMask
-
-## 📁 项目结构
+## 📂 项目结构
 
 ```
 chalee-truffle/
-├── contracts/          # 智能合约源代码
-│   ├── InfoContract.sol
-│   └── Migrations.sol
-├── migrations/         # 部署脚本
-│   ├── 1_initial_migration.js
-│   └── 2_deploy_contracts.js
-├── test/              # 测试文件
-│   └── info_contract.js
-├── build/             # 编译输出 (自动生成)
-├── node_modules/      # 项目依赖
-├── index.html         # 前端应用入口
-├── truffle-config.js  # Truffle 配置文件
-├── package.json       # 项目配置
-└── README.md         # 项目说明文档
+├── contracts/                # 智能合约
+│   └── InfoContract.sol      # 信息存储合约
+├── migrations/               # 部署脚本
+│   └── 1_deploy_contracts.js # 合约部署
+├── web/                      # 前端应用
+│   ├── index.html            # 主页面
+│   └── package.json          # 前端依赖
+├── truffle-config.js         # Truffle配置
+└── README.md                 # 项目文档
 ```
 
-## 🔧 配置说明
+## 📖 合约API
 
-### Truffle 配置 (truffle-config.js)
-```javascript
-module.exports = {
-  networks: {
-    development: {
-      host: "127.0.0.1",
-      port: 8545,
-      network_id: "*"
-    }
-  },
-  compilers: {
-    solc: {
-      version: "0.8.19"
-    }
-  }
-};
-```
+### InfoContract
 
-### 环境变量配置
-创建 `.env` 文件 (可选):
-```env
-MNEMONIC=your_wallet_mnemonic_here
-INFURA_PROJECT_ID=your_infura_project_id
-```
-
-## 🧪 测试
-
-运行完整测试套件：
-```bash
-truffle test
-```
-
-运行特定测试文件：
-```bash
-truffle test ./test/info_contract.js
-```
-
-## 📖 API 文档
-
-### InfoContract 智能合约
+简单的信息存储和检索合约，用于演示基本的区块链交互功能。
 
 #### 函数
 
-##### `sayHi() → string`
-- **描述**: 返回问候语
-- **类型**: Pure function
-- **返回**: 字符串 "Hello World"
-
-##### `setInfo(string _name, uint256 _age)`
-- **描述**: 设置用户信息
-- **参数**: 
-  - `_name`: 用户姓名
-  - `_age`: 用户年龄
-- **事件**: 触发 `Instructor` 事件
-
-##### `getInfo() → (string, uint256)`
-- **描述**: 获取当前存储的用户信息
-- **返回**: 姓名和年龄的元组
+| 函数 | 描述 | 参数 | 返回值 |
+|------|------|------|--------|
+| `setInfo(string _name, uint256 _age)` | 设置用户信息 | 姓名、年龄 | 无 |
+| `getInfo()` | 获取用户信息 | 无 | (string, uint256) |
+| `sayHi()` | 返回问候语 | 无 | string |
 
 #### 事件
 
-##### `Instructor(string name, uint256 age)`
-- **描述**: 当信息更新时触发
-- **参数**: 新的姓名和年龄值
+| 事件 | 描述 | 参数 |
+|------|------|------|
+| `Instructor(string name, uint256 age)` | 信息更新事件 | 姓名、年龄 |
 
-## 🐛 故障排除
+## 💡 使用示例
 
-### 常见问题
+### 合约交互
 
-1. **合约调用失败 - "could not decode result data"**
-   ```bash
-   # 解决方案：重新编译和部署
-   truffle compile
-   truffle migrate --reset
-   ```
+```javascript
+// 获取合约实例
+const contract = await InfoContract.deployed();
 
-2. **MetaMask 连接失败**
-   - 确保 Ganache 正在运行
-   - 检查网络配置是否正确
-   - 确认账户有足够的 ETH 余额
+// 设置信息
+await contract.setInfo("Alice", 25);
 
-3. **交易失败 - Gas 相关错误**
-   ```javascript
-   // 在合约调用时指定更高的 gas limit
-   await contract.setInfo(name, age, { gasLimit: 3000000 });
-   ```
+// 获取信息
+const [name, age] = await contract.getInfo();
+console.log(`用户: ${name}, 年龄: ${age}`);
 
-### 调试技巧
+// 监听事件
+contract.Instructor().on("data", event => {
+  console.log(`新增用户: ${event.returnValues.name}`);
+});
+```
 
-1. **使用 Truffle Console**
-   ```bash
-   truffle console
-   > let instance = await InfoContract.deployed()
-   > await instance.sayHi()
-   ```
+### 前端集成
 
-2. **查看合约事件**
-   ```javascript
-   // 监听所有事件
-   contract.getPastEvents('allEvents', { fromBlock: 0 })
-   ```
+```javascript
+// 使用Ethers.js连接合约
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+const signer = provider.getSigner();
+const contract = new ethers.Contract(contractAddress, abi, signer);
 
-## 🤝 贡献指南
+// 调用合约函数
+const tx = await contract.setInfo("Bob", 30);
+await tx.wait();
 
-欢迎贡献代码！请遵循以下步骤：
+// 读取合约状态
+const [name, age] = await contract.getInfo();
+```
 
-1. Fork 这个仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+## 🔍 故障排除
 
-### 代码规范
-- 使用 2 空格缩进
-- Solidity 合约遵循 [官方风格指南](https://docs.soliditylang.org/en/latest/style-guide.html)
-- JavaScript 代码使用 ESLint 规范
+**常见问题与解决方案:**
 
-## 📜 许可证
+1. **无法连接到网络**
+   - 确认Ganache正在运行
+   - 检查truffle-config.js中的网络配置
+   - 确认MetaMask已连接到正确网络
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+2. **合约部署失败**
+   - 检查编译器版本兼容性
+   - 确保账户有足够的测试ETH
+   - 运行 `truffle migrate --reset` 重新部署
 
-## 🙏 致谢
+3. **交易失败**
+   - 检查交易gas设置
+   - 确认函数调用参数类型正确
+   - 查看合约事件日志以获取详细错误信息
 
-- [Truffle Suite](https://trufflesuite.com/) - 优秀的开发框架
-- [OpenZeppelin](https://openzeppelin.com/) - 安全的合约库
-- [MetaMask](https://metamask.io/) - 用户友好的钱包
-- [Ethereum](https://ethereum.org/) - 去中心化平台
+## 🧪 测试指南
 
-## 🔗 相关链接
+```bash
+# 运行全部测试
+truffle test
 
-- [Truffle 文档](https://trufflesuite.com/docs/)
-- [Solidity 文档](https://docs.soliditylang.org/)
-- [Web3.js 文档](https://web3js.readthedocs.io/)
-- [Ethers.js 文档](https://docs.ethers.io/)
+# 查看测试覆盖率
+truffle run coverage
+```
+
+## 🤝 参与贡献
+
+欢迎贡献代码、报告问题或提出新功能建议!
+
+1. Fork 仓库
+2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建Pull Request
+
+## 📚 学习资源
+
+- [Truffle框架文档](https://trufflesuite.com/docs/)
+- [Solidity语言文档](https://docs.soliditylang.org/)
+- [Ethers.js指南](https://docs.ethers.io/v5/)
+- [Web3开发最佳实践](https://ethereum.org/en/developers/)
+
+## 📄 许可证
+
+本项目采用MIT许可证 - 详情请查看 [LICENSE](LICENSE) 文件
 
 ---
 
-⭐ 如果这个项目对你有帮助，请给它一个 star！
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/PrettyKing">PrettyKing</a></sub>
+</div>
