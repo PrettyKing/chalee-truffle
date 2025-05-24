@@ -1,650 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>InfoContract DApp</title>
-    <script src="./node_modules/ethers/dist/ethers.umd.js"></script>
-    <script src="./node_modules/jquery/dist/jquery.min.js"></script>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
-        min-height: 100vh;
-        color: #ffffff;
-        overflow-x: hidden;
-        position: relative;
-      }
-
-      /* 动态背景 */
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-          radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
-        z-index: -1;
-        animation: backgroundPulse 8s ease-in-out infinite alternate;
-      }
-
-      @keyframes backgroundPulse {
-        0% { opacity: 0.3; }
-        100% { opacity: 0.7; }
-      }
-
-      /* 浮动粒子背景效果 */
-      .particles {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-      }
-
-      .particle {
-        position: absolute;
-        background: linear-gradient(45deg, #00f5ff, #ff00ff);
-        border-radius: 50%;
-        animation: float 6s ease-in-out infinite;
-        opacity: 0.1;
-      }
-
-      .particle:nth-child(odd) {
-        animation-direction: reverse;
-      }
-
-      @keyframes float {
-        0%, 100% {
-          transform: translateY(0px) rotate(0deg);
-        }
-        50% {
-          transform: translateY(-20px) rotate(180deg);
-        }
-      }
-
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        position: relative;
-      }
-
-      h1 {
-        text-align: center;
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 40px;
-        background: linear-gradient(45deg, #00f5ff, #ff00ff, #00ff00);
-        background-size: 300% 300%;
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: gradientShift 3s ease-in-out infinite;
-        text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
-      }
-
-      @keyframes gradientShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-      }
-
-      .section {
-        margin-bottom: 30px;
-        padding: 25px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        backdrop-filter: blur(20px);
-        box-shadow: 
-          0 8px 32px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-        transition: left 0.5s;
-      }
-
-      .section:hover::before {
-        left: 100%;
-      }
-
-      .section:hover {
-        transform: translateY(-5px);
-        box-shadow: 
-          0 20px 40px rgba(0, 0, 0, 0.4),
-          0 0 20px rgba(0, 245, 255, 0.2);
-        border-color: rgba(0, 245, 255, 0.3);
-      }
-
-      .section h3 {
-        margin-bottom: 20px;
-        font-size: 1.4rem;
-        color: #00f5ff;
-        text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      /* 按钮样式 */
-      button {
-        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 50px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        margin: 8px;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
-      }
-
-      button:hover::before {
-        left: 100%;
-      }
-
-      button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-        background: linear-gradient(45deg, #764ba2 0%, #667eea 100%);
-      }
-
-      button:active {
-        transform: translateY(0);
-      }
-
-      button:disabled {
-        background: linear-gradient(45deg, #555, #777);
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      /* 特殊按钮样式 */
-      #connectWallet {
-        background: linear-gradient(45deg, #00f5ff, #0080ff);
-        box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0% { box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4); }
-        50% { box-shadow: 0 4px 25px rgba(0, 245, 255, 0.8); }
-        100% { box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4); }
-      }
-
-      #disconnectWallet {
-        background: linear-gradient(45deg, #ff4757, #ff3838);
-        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-      }
-
-      /* 输入框样式 */
-      input[type='text'],
-      input[type='number'] {
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 15px;
-        padding: 12px 20px;
-        color: #ffffff;
-        font-size: 14px;
-        margin: 8px;
-        width: 220px;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-      }
-
-      input[type='text']:focus,
-      input[type='number']:focus {
-        outline: none;
-        border-color: #00f5ff;
-        box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
-        background: rgba(255, 255, 255, 0.15);
-      }
-
-      input::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      /* 状态消息样式 */
-      .status {
-        padding: 15px 20px;
-        margin: 15px 0;
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-        animation: slideIn 0.3s ease-out;
-        position: relative;
-        overflow: hidden;
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateX(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      .success {
-        background: linear-gradient(45deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.2));
-        border: 1px solid rgba(0, 255, 0, 0.3);
-        color: #00ff88;
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-      }
-
-      .error {
-        background: linear-gradient(45deg, rgba(255, 0, 0, 0.2), rgba(200, 0, 0, 0.2));
-        border: 1px solid rgba(255, 0, 0, 0.3);
-        color: #ff6b6b;
-        box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
-      }
-
-      .info {
-        background: linear-gradient(45deg, rgba(0, 245, 255, 0.2), rgba(0, 150, 255, 0.2));
-        border: 1px solid rgba(0, 245, 255, 0.3);
-        color: #00f5ff;
-        box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      #accountInfo {
-        font-weight: bold;
-        color: #00ff88;
-        text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        font-size: 1.1rem;
-        animation: glow 2s ease-in-out infinite alternate;
-      }
-
-      @keyframes glow {
-        from { text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
-        to { text-shadow: 0 0 20px rgba(0, 255, 136, 0.8), 0 0 30px rgba(0, 255, 136, 0.4); }
-      }
-
-      /* 加载动画 */
-      .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top-color: #00f5ff;
-        animation: spin 1s ease-in-out infinite;
-        margin-right: 10px;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      /* 响应式设计 */
-      @media (max-width: 768px) {
-        .container {
-          padding: 15px;
-        }
-
-        h1 {
-          font-size: 2rem;
-        }
-
-        .section {
-          padding: 20px;
-        }
-
-        input[type='text'],
-        input[type='number'] {
-          width: 100%;
-          margin: 5px 0;
-        }
-
-        button {
-          width: 100%;
-          margin: 5px 0;
-        }
-      }
-
-      /* 网格背景效果 */
-      .grid-background {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: 
-          linear-gradient(rgba(0, 245, 255, 0.1) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0, 245, 255, 0.1) 1px, transparent 1px);
-        background-size: 50px 50px;
-        z-index: -2;
-        animation: gridMove 20s linear infinite;
-      }
-
-      @keyframes gridMove {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(50px, 50px); }
-      }
-
-      /* 特殊效果：数据流动画 */
-      .data-stream {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        width: 3px;
-        height: 30px;
-        background: linear-gradient(to bottom, transparent, #00f5ff, transparent);
-        animation: dataStream 2s linear infinite;
-        opacity: 0.6;
-      }
-
-      @keyframes dataStream {
-        0% { transform: translateY(-100px); opacity: 0; }
-        50% { opacity: 1; }
-        100% { transform: translateY(200px); opacity: 0; }
-      }
-
-      /* 连接状态指示器 */
-      .connection-indicator {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #ff4757;
-        box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
-        z-index: 1000;
-        transition: all 0.3s ease;
-      }
-
-      .connection-indicator.connected {
-        background: #00ff88;
-        box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        animation: connectionPulse 2s infinite;
-      }
-
-      @keyframes connectionPulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- 背景效果 -->
-    <div class="grid-background"></div>
-    <div class="particles" id="particles"></div>
-    <div class="connection-indicator" id="connectionIndicator"></div>
-
-    <div class="container">
-      <h1>Chalee DApp</h1>
-
-      <!-- 钱包连接部分 -->
-      <div class="section">
-        <div class="data-stream"></div>
-        <h3>🔗 钱包连接</h3>
-        <button id="connectWallet">连接 MetaMask</button>
-        <button id="disconnectWallet" class="hidden">断开连接</button>
-        <div id="accountInfo" class="hidden"></div>
-        <div id="connectionStatus"></div>
-      </div>
-
-      <!-- 合约交互部分 -->
-      <div id="contractSection" class="hidden">
-        <!-- sayHi 测试 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 0.5s;"></div>
-          <h3>👋 Say Hi 测试</h3>
-          <button id="sayHiBtn">调用 sayHi()</button>
-          <div id="sayHiResult"></div>
-        </div>
-
-        <!-- 设置信息 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1s;"></div>
-          <h3>📝 设置信息</h3>
-          <div>
-            <input type="text" id="nameInput" placeholder="输入姓名" />
-            <input type="number" id="ageInput" placeholder="输入年龄" />
-            <button id="setInfoBtn">设置信息</button>
-          </div>
-          <div id="setInfoStatus"></div>
-        </div>
-
-        <!-- 获取信息 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1.5s;"></div>
-          <h3>📋 获取信息</h3>
-          <button id="getInfoBtn">获取当前信息</button>
-          <div id="getInfoResult"></div>
-        </div>
-
-        <!-- 事件监听 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 2s;"></div>
-          <h3>📡 事件监听</h3>
-          <button id="startListening">开始监听事件</button>
-          <button id="stopListening">停止监听</button>
-          <div id="eventLog"></div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      // 合约配置
-      const CONTRACT_ADDRESS = '0x934F2E56d4E665d89A84F18272fc5021f87C2287';
-      const CONTRACT_ABI = [
-        {
-          inputs: [
-            { internalType: 'string', name: '_name', type: 'string' },
-            { internalType: 'uint256', name: '_age', type: 'uint256' },
-          ],
-          name: 'setInfo',
-          outputs: [],
-          stateMutability: 'nonpayable',
-          type: 'function',
-        },
-        {
-          inputs: [],
-          name: 'sayHi',
-          outputs: [{ internalType: 'string', name: '', type: 'string' }],
-          stateMutability: 'pure',
-          type: 'function',
-        },
-        {
-          inputs: [],
-          name: 'getInfo',
-          outputs: [
-            { internalType: 'string', name: '', type: 'string' },
-            { internalType: 'uint256', name: '', type: 'uint256' },
-          ],
-          stateMutability: 'view',
-          type: 'function',
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: 'string',
-              name: 'name',
-              type: 'string',
-            },
-            {
-              indexed: false,
-              internalType: 'uint256',
-              name: 'age',
-              type: 'uint256',
-            },
-          ],
-          name: 'Instructor',
-          type: 'event',
-        },
-      ];
-
-      // 全局变量
-      let provider = null;
-      let signer = null;
-      let contract = null;
-      let currentAccount = null;
-      let eventListener = null;
-
-      // DOM 元素
-      const $connectWalletBtn = $('#connectWallet');
-      const $disconnectWalletBtn = $('#disconnectWallet');
-      const $accountInfo = $('#accountInfo');
-      const $connectionStatus = $('#connectionStatus');
-      const $contractSection = $('#contractSection');
-      const $connectionIndicator = $('#connectionIndicator');
-
-      const $sayHiBtn = $('#sayHiBtn');
-      const $sayHiResult = $('#sayHiResult');
-
-      const $setInfoBtn = $('#setInfoBtn');
-      const $nameInput = $('#nameInput');
-      const $ageInput = $('#ageInput');
-      const $setInfoStatus = $('#setInfoStatus');
-
-      const $getInfoBtn = $('#getInfoBtn');
-      const $getInfoResult = $('#getInfoResult');
-
-      const $startListeningBtn = $('#startListening');
-      const $stopListeningBtn = $('#stopListening');
-      const $eventLog = $('#eventLog');
-
-      // 创建浮动粒子
-      function createParticles() {
-        const particlesContainer = document.getElementById('particles');
-        for (let i = 0; i < 50; i++) {
-          const particle = document.createElement('div');
-          particle.className = 'particle';
-          particle.style.left = Math.random() * 100 + '%';
-          particle.style.top = Math.random() * 100 + '%';
-          particle.style.width = (Math.random() * 4 + 2) + 'px';
-          particle.style.height = particle.style.width;
-          particle.style.animationDelay = Math.random() * 6 + 's';
-          particle.style.animationDuration = (Math.random() * 3 + 3) + 's';
-          particlesContainer.appendChild(particle);
-        }
-      }
-
-      // 工具函数
-      function showStatus($element, message, type = 'info') {
-        const loadingSpinner = type === 'info' && message.includes('正在') ? '<div class="loading"></div>' : '';
-        $element.html(`<div class="status ${type}">${loadingSpinner}${message}</div>`);
-      }
-
-      function clearStatus($element) {
-        $element.html('');
-      }
-
-      // 更新连接指示器
-      function updateConnectionIndicator(connected) {
-        if (connected) {
-          $connectionIndicator.addClass('connected');
-        } else {
-          $connectionIndicator.removeClass('connected');
-        }
-      }
-
-      // 检查是否安装了 MetaMask
-      function checkMetaMask() {
-        if (typeof window.ethereum !== 'undefined') {
-          console.log('MetaMask 已安装');
-          return true;
-        } else {
-          showStatus($connectionStatus, '请安装 MetaMask 钱包扩展！', 'error');
-          return false;
-        }
-      }
-
-      // 连接钱包
-      async function connectWallet() {
-        if (!checkMetaMask()) return;
-
-        try {
-          showStatus($connectionStatus, '正在连接钱包...', 'info');
-
-          const accounts = await window.ethereum.request({
-            method: 'eth_requestAccounts',
-          });
-
-          if (accounts.length === 0) {
-            throw new Error('没有找到账户');
-          }
-
-          currentAccount = accounts[0];
-          provider = new ethers.BrowserProvider(window.ethereum);
-          signer = await provider.getSigner();
-          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-          updateConnectionUI(true);
-          updateConnectionIndicator(true);
-          showStatus($connectionStatus, '钱包连接成功！', 'success');
-        } catch (error) {
-          console.error('连接钱包失败:', error);
-          showStatus($connectionStatus, `连接失败: ${error.message}`, 'error');
-          updateConnectionIndicator(false);
-        }
-      }
-
       // 断开连接
       function disconnectWallet() {
         provider = null;
         signer = null;
-        contract = null;
+        infoContract = null;
+        payableContract = null;
         currentAccount = null;
 
-        if (eventListener && contract) {
-          contract.off('Instructor', eventListener);
-          eventListener = null;
-        }
+        // 停止所有事件监听
+        stopAllEventListeners();
 
         updateConnectionUI(false);
         updateConnectionIndicator(false);
         showStatus($connectionStatus, '已断开钱包连接', 'info');
         clearAllResults();
+      }
+
+      // 停止所有事件监听
+      function stopAllEventListeners() {
+        if (infoEventListener && infoContract) {
+          infoContract.off('Instructor', infoEventListener);
+          infoEventListener = null;
+        }
+        
+        if (payableContract) {
+          if (depositEventListener) {
+            payableContract.off('Deposit', depositEventListener);
+            depositEventListener = null;
+          }
+          
+          if (withdrawEventListener) {
+            payableContract.off('Withdraw', withdrawEventListener);
+            withdrawEventListener = null;
+          }
+        }
       }
 
       // 更新连接状态 UI
@@ -653,34 +41,62 @@
           $connectWalletBtn.addClass('hidden');
           $disconnectWalletBtn.removeClass('hidden');
           $accountInfo.removeClass('hidden');
-          $contractSection.removeClass('hidden');
+          $contractTabs.removeClass('hidden');
           $accountInfo.text(`已连接账户: ${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`);
         } else {
           $connectWalletBtn.removeClass('hidden');
           $disconnectWalletBtn.addClass('hidden');
           $accountInfo.addClass('hidden');
-          $contractSection.addClass('hidden');
+          $contractTabs.addClass('hidden');
+          $infoContractSection.addClass('hidden');
+          $payableDemoSection.addClass('hidden');
         }
       }
 
       // 清除所有结果
       function clearAllResults() {
+        // 清除InfoContract相关状态
         clearStatus($sayHiResult);
         clearStatus($setInfoStatus);
         clearStatus($getInfoResult);
         clearStatus($eventLog);
+        
+        // 清除PayableDemo相关状态
+        clearStatus($balanceDisplay);
+        clearStatus($depositStatus);
+        clearStatus($withdrawStatus);
+        clearStatus($payableEventLog);
       }
+
+      // 切换合约视图
+      function switchContract(contractType) {
+        activeContract = contractType;
+        
+        if (contractType === 'infoContract') {
+          $infoContractSection.removeClass('hidden');
+          $payableDemoSection.addClass('hidden');
+          $('.contract-tab[data-contract="infoContract"]').addClass('active');
+          $('.contract-tab[data-contract="payableDemo"]').removeClass('active');
+        } else {
+          $infoContractSection.addClass('hidden');
+          $payableDemoSection.removeClass('hidden');
+          $('.contract-tab[data-contract="infoContract"]').removeClass('active');
+          $('.contract-tab[data-contract="payableDemo"]').addClass('active');
+        }
+      }
+
+      //===== InfoContract 功能 =====//
 
       // sayHi 函数
       async function callSayHi() {
-        if (!contract) {
+        if (!infoContract) {
           showStatus($sayHiResult, '请先连接钱包', 'error');
           return;
         }
 
         try {
           showStatus($sayHiResult, '正在调用 sayHi()...', 'info');
-          const result = await contract.sayHi();
+          const result = await infoContract.sayHi();
           showStatus($sayHiResult, `sayHi() 返回: "${result}"`, 'success');
         } catch (error) {
           console.error('调用 sayHi 失败:', error);
@@ -690,7 +106,7 @@
 
       // 设置信息
       async function setInfo() {
-        if (!contract) {
+        if (!infoContract) {
           showStatus($setInfoStatus, '请先连接钱包', 'error');
           return;
         }
@@ -706,7 +122,7 @@
         try {
           showStatus($setInfoStatus, '正在设置信息...', 'info');
 
-          const tx = await contract.setInfo(name, age);
+          const tx = await infoContract.setInfo(name, age);
           showStatus($setInfoStatus, `交易已发送，交易哈希: ${tx.hash}`, 'info');
 
           const receipt = await tx.wait();
@@ -730,14 +146,14 @@
 
       // 获取信息
       async function getInfo() {
-        if (!contract) {
+        if (!infoContract) {
           showStatus($getInfoResult, '请先连接钱包', 'error');
           return;
         }
 
         try {
           showStatus($getInfoResult, '正在获取信息...', 'info');
-          const result = await contract.getInfo();
+          const result = await infoContract.getInfo();
           const [name, age] = result;
 
           if (name && age.toString() !== '0') {
@@ -751,19 +167,19 @@
         }
       }
 
-      // 开始监听事件
-      function startListening() {
-        if (!contract) {
+      // 开始监听信息合约事件
+      function startInfoListening() {
+        if (!infoContract) {
           showStatus($eventLog, '请先连接钱包', 'error');
           return;
         }
 
-        if (eventListener) {
+        if (infoEventListener) {
           showStatus($eventLog, '已在监听事件中...', 'info');
           return;
         }
 
-        eventListener = (...args) => {
+        infoEventListener = (...args) => {
           const event = args[args.length - 1];
           const [name, age] = args.slice(0, -1);
 
@@ -778,18 +194,211 @@
           $eventLog.html(eventInfo + $eventLog.html());
         };
 
-        contract.on('Instructor', eventListener);
+        infoContract.on('Instructor', infoEventListener);
         showStatus($eventLog, '开始监听 Instructor 事件...', 'info');
       }
 
-      // 停止监听事件
-      function stopListening() {
-        if (eventListener && contract) {
-          contract.off('Instructor', eventListener);
-          eventListener = null;
+      // 停止监听信息合约事件
+      function stopInfoListening() {
+        if (infoEventListener && infoContract) {
+          infoContract.off('Instructor', infoEventListener);
+          infoEventListener = null;
           showStatus($eventLog, '已停止监听事件', 'info');
         } else {
           showStatus($eventLog, '当前没有在监听事件', 'info');
+        }
+      }
+
+      //===== PayableDemo 功能 =====//
+
+      // 格式化ETH金额
+      function formatEth(wei) {
+        return ethers.formatEther(wei);
+      }
+
+      // 解析ETH金额为wei
+      function parseEth(eth) {
+        return ethers.parseEther(eth.toString());
+      }
+
+      // 获取合约余额
+      async function getContractBalance() {
+        if (!payableContract) {
+          showStatus($balanceDisplay, '请先连接钱包', 'error');
+          return;
+        }
+
+        try {
+          showStatus($balanceDisplay, '正在查询合约余额...', 'info');
+          const balance = await payableContract.getBalance();
+          
+          const balanceInEth = formatEth(balance);
+          $balanceDisplay.html(`
+            <div class="balance-display">
+              当前合约余额: <span class="amount-highlight"><span class="eth-icon">Ξ</span>${balanceInEth}</span> ETH
+            </div>
+          `);
+        } catch (error) {
+          console.error('获取余额失败:', error);
+          showStatus($balanceDisplay, `获取余额失败: ${error.message}`, 'error');
+        }
+      }
+
+      // 存入ETH
+      async function depositEth() {
+        if (!payableContract) {
+          showStatus($depositStatus, '请先连接钱包', 'error');
+          return;
+        }
+
+        const amount = $depositAmount.val();
+        
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+          showStatus($depositStatus, '请输入有效的存款金额', 'error');
+          return;
+        }
+
+        try {
+          showStatus($depositStatus, `正在存入 ${amount} ETH...`, 'info');
+          
+          const amountWei = parseEth(amount);
+          const tx = await payableContract.deposit({ value: amountWei });
+          
+          showStatus($depositStatus, `交易已发送，交易哈希: ${tx.hash}`, 'info');
+
+          const receipt = await tx.wait();
+          showStatus($depositStatus, `存款成功！区块号: ${receipt.blockNumber}`, 'success');
+
+          $depositAmount.val('');
+          
+          // 刷新余额
+          getContractBalance();
+        } catch (error) {
+          console.error('存款失败:', error);
+          let errorMessage = error.message;
+
+          if (error.code === 'ACTION_REJECTED') {
+            errorMessage = '用户拒绝了交易';
+          } else if (error.code === 'INSUFFICIENT_FUNDS') {
+            errorMessage = '余额不足';
+          }
+
+          showStatus($depositStatus, `存款失败: ${errorMessage}`, 'error');
+        }
+      }
+
+      // 提取ETH
+      async function withdrawEth() {
+        if (!payableContract) {
+          showStatus($withdrawStatus, '请先连接钱包', 'error');
+          return;
+        }
+
+        const amount = $withdrawAmount.val();
+        
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+          showStatus($withdrawStatus, '请输入有效的提取金额', 'error');
+          return;
+        }
+
+        try {
+          showStatus($withdrawStatus, `正在提取 ${amount} ETH...`, 'info');
+          
+          const amountWei = parseEth(amount);
+          const tx = await payableContract.withdraw(amountWei);
+          
+          showStatus($withdrawStatus, `交易已发送，交易哈希: ${tx.hash}`, 'info');
+
+          const receipt = await tx.wait();
+          showStatus($withdrawStatus, `提取成功！区块号: ${receipt.blockNumber}`, 'success');
+
+          $withdrawAmount.val('');
+          
+          // 刷新余额
+          getContractBalance();
+        } catch (error) {
+          console.error('提取失败:', error);
+          let errorMessage = error.message;
+
+          if (error.code === 'ACTION_REJECTED') {
+            errorMessage = '用户拒绝了交易';
+          } else if (error.code === 'INSUFFICIENT_FUNDS') {
+            errorMessage = '余额不足';
+          } else if (error.message.includes('Insufficient balance')) {
+            errorMessage = '合约余额不足';
+          }
+
+          showStatus($withdrawStatus, `提取失败: ${errorMessage}`, 'error');
+        }
+      }
+
+      // 开始监听支付合约事件
+      function startPayableListening() {
+        if (!payableContract) {
+          showStatus($payableEventLog, '请先连接钱包', 'error');
+          return;
+        }
+
+        if (depositEventListener || withdrawEventListener) {
+          showStatus($payableEventLog, '已在监听事件中...', 'info');
+          return;
+        }
+
+        // 监听存款事件
+        depositEventListener = (sender, amount, event) => {
+          const timestamp = new Date().toLocaleString();
+          const amountInEth = formatEth(amount);
+          const isSelf = sender.toLowerCase() === currentAccount.toLowerCase() ? ' (您)' : '';
+          
+          const eventInfo = `
+            <div class="status success">
+              [${timestamp}] 检测到 Deposit 事件<br>
+              发送者: ${sender.slice(0, 6)}...${sender.slice(-4)}${isSelf}<br>
+              金额: <span class="amount-highlight"><span class="eth-icon">Ξ</span>${amountInEth}</span> ETH<br>
+              交易哈希: ${event.transactionHash || event.log?.transactionHash || 'N/A'}
+            </div>
+          `;
+          $payableEventLog.html(eventInfo + $payableEventLog.html());
+        };
+
+        // 监听提款事件
+        withdrawEventListener = (receiver, amount, event) => {
+          const timestamp = new Date().toLocaleString();
+          const amountInEth = formatEth(amount);
+          const isSelf = receiver.toLowerCase() === currentAccount.toLowerCase() ? ' (您)' : '';
+          
+          const eventInfo = `
+            <div class="status success">
+              [${timestamp}] 检测到 Withdraw 事件<br>
+              接收者: ${receiver.slice(0, 6)}...${receiver.slice(-4)}${isSelf}<br>
+              金额: <span class="amount-highlight"><span class="eth-icon">Ξ</span>${amountInEth}</span> ETH<br>
+              交易哈希: ${event.transactionHash || event.log?.transactionHash || 'N/A'}
+            </div>
+          `;
+          $payableEventLog.html(eventInfo + $payableEventLog.html());
+        };
+
+        payableContract.on('Deposit', depositEventListener);
+        payableContract.on('Withdraw', withdrawEventListener);
+        showStatus($payableEventLog, '开始监听 Deposit 和 Withdraw 事件...', 'info');
+      }
+
+      // 停止监听支付合约事件
+      function stopPayableListening() {
+        if (payableContract) {
+          if (depositEventListener) {
+            payableContract.off('Deposit', depositEventListener);
+            depositEventListener = null;
+          }
+          
+          if (withdrawEventListener) {
+            payableContract.off('Withdraw', withdrawEventListener);
+            withdrawEventListener = null;
+          }
+          
+          showStatus($payableEventLog, '已停止监听事件', 'info');
+        } else {
+          showStatus($payableEventLog, '当前没有在监听事件', 'info');
         }
       }
 
@@ -813,13 +422,29 @@
         // 创建背景粒子
         createParticles();
 
+        // 钱包连接
         $connectWalletBtn.on('click', connectWallet);
         $disconnectWalletBtn.on('click', disconnectWallet);
+        
+        // 合约切换
+        $('.contract-tab').on('click', function() {
+          const contractType = $(this).data('contract');
+          switchContract(contractType);
+        });
+
+        // InfoContract功能
         $sayHiBtn.on('click', callSayHi);
         $setInfoBtn.on('click', setInfo);
         $getInfoBtn.on('click', getInfo);
-        $startListeningBtn.on('click', startListening);
-        $stopListeningBtn.on('click', stopListening);
+        $startListeningBtn.on('click', startInfoListening);
+        $stopListeningBtn.on('click', stopInfoListening);
+
+        // PayableDemo功能
+        $getBalanceBtn.on('click', getContractBalance);
+        $depositBtn.on('click', depositEth);
+        $withdrawBtn.on('click', withdrawEth);
+        $startPayableListeningBtn.on('click', startPayableListening);
+        $stopPayableListeningBtn.on('click', stopPayableListening);
 
         // 页面加载完成后检查连接状态
         if (checkMetaMask()) {
@@ -837,3 +462,4 @@
       });
     </script>
   </body>
+</html>
