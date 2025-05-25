@@ -6,9 +6,6 @@
 
 一个轻量级的以太坊DApp开发启动模板，基于Truffle框架，提供智能合约开发、部署、测试以及交互式前端界面。
 
-<div align="center">
-  <img src="https://ethereum.org/static/28214bb68eb5445dcb063a72535bc90c/9019e/hero.png" alt="Ethereum DApp" width="400"/>
-</div>
 
 ## ✨ 主要特性
 
