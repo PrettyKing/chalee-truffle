@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MetaMask SDK Demo</title>
+    <!-- 使用官方推荐的CDN链接 -->
     <script src="https://c0f4f41c-2f55-4863-921b-sdk-docs.github.io/cdn/metamask-sdk.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -301,6 +302,15 @@
         justify-content: center;
         margin: 10px 0;
       }
+      
+      .sdk-info {
+        background: rgba(255, 184, 0, 0.1);
+        border-left: 3px solid var(--warning-color);
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-size: 0.9rem;
+      }
 
       /* Responsive Styles */
       @media (max-width: 600px) {
@@ -335,6 +345,10 @@
         
         <div class="info-box">
           Connect your MetaMask wallet to interact with the blockchain.
+        </div>
+        
+        <div id="connectionMethod" class="sdk-info hidden">
+          连接方式: <span id="connectionType">-</span>
         </div>
         
         <div class="button-container">
@@ -385,62 +399,161 @@
     </div>
     
     <script>
-      const options = {
-        injectProvider: false,
-        dappMetadata: {
-          name: "Chalee MetaMask Demo",
-          url: window.location.host,
-        },
-        logging: {
-          sdk: false,
-        },
-      };
-      
-      // Initialize the SDK
-      const MMSDK = new MetaMaskSDK.MetaMaskSDK(options);
-      const ethereum = MMSDK.getProvider();
-      
-      console.log("MetaMask SDK initialized:", MMSDK);
-      console.log("Ethereum provider:", ethereum);
-
       // DOM Elements
       const connectButton = document.getElementById("connectButton");
       const disconnectButton = document.getElementById("disconnectButton");
       const refreshBalanceButton = document.getElementById("refreshBalanceButton");
       const sendTestTxButton = document.getElementById("sendTestTxButton");
       const connectionStatus = document.getElementById("connectionStatus");
+      const connectionMethod = document.getElementById("connectionMethod");
+      const connectionType = document.getElementById("connectionType");
       const accountElement = document.getElementById("account");
       const balanceElement = document.getElementById("balance");
       const balanceLoading = document.getElementById("balanceLoading");
       const chainIdElement = document.getElementById("chainId");
       const walletInfoCard = document.getElementById("walletInfo");
 
-      // Current account
+      // 全局变量
       let currentAccount = null;
+      let ethereum = null;
       
-      // Connect to MetaMask
+      // 初始化应用程序
+      async function initApp() {
+        console.log("初始化应用程序...");
+        
+        // 尝试获取以太坊提供者
+        ethereum = await getEthereumProvider();
+        
+        if (!ethereum) {
+          // 如果没有找到提供者，显示错误消息
+          connectionStatus.innerHTML = '<div class="status-dot"></div><span>MetaMask不可用</span>';
+          connectButton.disabled = true;
+          connectButton.textContent = "MetaMask未安装";
+          return;
+        }
+        
+        // 设置事件监听器
+        setupEventListeners();
+        
+        // 检查是否已连接
+        checkIfConnected();
+      }
+      
+      // 获取以太坊提供者 (尝试多种方式)
+      async function getEthereumProvider() {
+        // 方法1: 检查是否已安装MetaMask扩展
+        if (typeof window.ethereum !== 'undefined') {
+          console.log("检测到MetaMask浏览器扩展");
+          connectionMethod.classList.remove("hidden");
+          connectionType.textContent = "MetaMask 浏览器扩展";
+          return window.ethereum;
+        }
+        
+        // 方法2: 尝试使用MetaMask SDK
+        try {
+          console.log("尝试通过SDK连接MetaMask...");
+          
+          // 确保MetaMaskSDK存在
+          if (typeof MetaMaskSDK === 'undefined') {
+            console.error("MetaMask SDK 未加载");
+            return null;
+          }
+          
+          const options = {
+            injectProvider: false,
+            dappMetadata: {
+              name: "Chalee MetaMask Demo",
+              url: window.location.host,
+            },
+            logging: {
+              sdk: false,
+            },
+          };
+          
+          // 初始化SDK
+          const MMSDK = new MetaMaskSDK(options);
+          const provider = MMSDK.getProvider();
+          
+          if (provider) {
+            console.log("通过SDK成功获取提供者");
+            connectionMethod.classList.remove("hidden");
+            connectionType.textContent = "MetaMask SDK";
+            return provider;
+          }
+        } catch (error) {
+          console.error("初始化MetaMask SDK失败:", error);
+        }
+        
+        console.error("无法获取以太坊提供者");
+        return null;
+      }
+      
+      // 设置事件监听器
+      function setupEventListeners() {
+        connectButton.addEventListener("click", connectMetaMask);
+        disconnectButton.addEventListener("click", disconnectWallet);
+        refreshBalanceButton.addEventListener("click", () => getBalance(currentAccount));
+        sendTestTxButton.addEventListener("click", sendTestTransaction);
+        
+        // MetaMask事件
+        ethereum.on("accountsChanged", handleAccountsChanged);
+        
+        ethereum.on("chainChanged", (chainId) => {
+          chainIdElement.innerText = parseInt(chainId, 16).toString();
+          // 链变化时刷新余额
+          if (currentAccount) {
+            getBalance(currentAccount);
+          }
+        });
+        
+        ethereum.on("disconnect", (error) => {
+          console.log("MetaMask disconnected", error);
+          disconnectWallet();
+        });
+      }
+      
+      // 检查是否已连接
+      async function checkIfConnected() {
+        try {
+          const accounts = await ethereum.request({ method: "eth_accounts" });
+          if (accounts.length > 0) {
+            handleAccountsChanged(accounts);
+          }
+        } catch (err) {
+          console.error("检查账户状态失败:", err);
+        }
+      }
+      
+      // 连接MetaMask
       async function connectMetaMask() {
         if (!ethereum) {
-          alert("MetaMask is not installed or not available!");
+          alert("MetaMask未安装或不可用！请安装MetaMask或刷新页面。");
           return;
         }
         
         try {
+          // 显示连接中状态
+          connectionStatus.innerHTML = '<div class="status-dot"></div><span>正在连接...</span>';
+          connectButton.disabled = true;
+          
           const accounts = await ethereum.request({
             method: "eth_requestAccounts",
           });
           
           handleAccountsChanged(accounts);
+          connectButton.disabled = false;
         } catch (error) {
-          console.error("Error connecting to MetaMask:", error);
-          alert(`Connection failed: ${error.message}`);
+          console.error("连接MetaMask失败:", error);
+          alert(`连接失败: ${error.message}`);
+          connectionStatus.innerHTML = '<div class="status-dot"></div><span>连接失败</span>';
+          connectButton.disabled = false;
         }
       }
       
-      // Handle accounts changed
+      // 处理账户变更
       function handleAccountsChanged(accounts) {
         if (accounts.length === 0) {
-          // No accounts found or user disconnected
+          // 无账户或用户断开连接
           disconnectWallet();
           return;
         }
@@ -448,19 +561,19 @@
         currentAccount = accounts[0];
         accountElement.innerText = `${currentAccount}`;
         
-        // Update UI
+        // 更新UI
         connectionStatus.className = "status status-connected";
-        connectionStatus.innerHTML = '<div class="status-dot"></div><span>Connected</span>';
+        connectionStatus.innerHTML = '<div class="status-dot"></div><span>已连接</span>';
         connectButton.classList.add("hidden");
         disconnectButton.classList.remove("hidden");
         walletInfoCard.classList.remove("hidden");
         
-        // Get balance and chain ID
+        // 获取余额和链ID
         getBalance(currentAccount);
         getChainId();
       }
       
-      // Get account balance
+      // 获取账户余额
       async function getBalance(account) {
         try {
           balanceLoading.classList.remove("hidden");
@@ -477,43 +590,43 @@
           balanceLoading.classList.add("hidden");
           balanceElement.classList.remove("hidden");
         } catch (error) {
-          console.error("Error getting balance:", error);
-          balanceElement.innerText = "Error loading balance";
+          console.error("获取余额失败:", error);
+          balanceElement.innerText = "获取余额失败";
           balanceLoading.classList.add("hidden");
           balanceElement.classList.remove("hidden");
         }
       }
       
-      // Get current chain ID
+      // 获取当前链ID
       async function getChainId() {
         try {
           const chainId = await ethereum.request({ method: "eth_chainId" });
           chainIdElement.innerText = parseInt(chainId, 16).toString();
         } catch (error) {
-          console.error("Error getting chain ID:", error);
-          chainIdElement.innerText = "Error";
+          console.error("获取链ID失败:", error);
+          chainIdElement.innerText = "获取失败";
         }
       }
       
-      // Disconnect wallet (UI only, MetaMask doesn't have a true disconnect method)
+      // 断开钱包连接 (仅UI层面，MetaMask没有真正的断开方法)
       function disconnectWallet() {
         currentAccount = null;
-        accountElement.innerText = "No account connected";
+        accountElement.innerText = "未连接账户";
         balanceElement.innerText = "-";
         chainIdElement.innerText = "-";
         
-        // Update UI
+        // 更新UI
         connectionStatus.className = "status status-disconnected";
-        connectionStatus.innerHTML = '<div class="status-dot"></div><span>Disconnected</span>';
+        connectionStatus.innerHTML = '<div class="status-dot"></div><span>已断开</span>';
         connectButton.classList.remove("hidden");
         disconnectButton.classList.add("hidden");
         walletInfoCard.classList.add("hidden");
       }
       
-      // Send a test transaction (0 ETH to self)
+      // 发送测试交易 (0 ETH到自己)
       async function sendTestTransaction() {
         if (!currentAccount) {
-          alert("Please connect your wallet first!");
+          alert("请先连接钱包!");
           return;
         }
         
@@ -530,45 +643,15 @@
             params: [params],
           });
           
-          alert(`Transaction sent successfully!\nTransaction Hash: ${txHash}`);
+          alert(`交易发送成功!\n交易哈希: ${txHash}`);
         } catch (error) {
-          console.error("Error sending transaction:", error);
-          alert(`Transaction failed: ${error.message}`);
+          console.error("发送交易失败:", error);
+          alert(`交易失败: ${error.message}`);
         }
       }
 
-      // Event Listeners
-      connectButton.addEventListener("click", connectMetaMask);
-      disconnectButton.addEventListener("click", disconnectWallet);
-      refreshBalanceButton.addEventListener("click", () => getBalance(currentAccount));
-      sendTestTxButton.addEventListener("click", sendTestTransaction);
-      
-      // MetaMask Events
-      if (ethereum) {
-        ethereum.on("accountsChanged", handleAccountsChanged);
-        
-        ethereum.on("chainChanged", (chainId) => {
-          chainIdElement.innerText = parseInt(chainId, 16).toString();
-          // Refresh balance when chain changes
-          if (currentAccount) {
-            getBalance(currentAccount);
-          }
-        });
-        
-        ethereum.on("disconnect", (error) => {
-          console.log("MetaMask disconnected", error);
-          disconnectWallet();
-        });
-        
-        // Check if already connected
-        ethereum.request({ method: "eth_accounts" })
-          .then(accounts => {
-            if (accounts.length > 0) {
-              handleAccountsChanged(accounts);
-            }
-          })
-          .catch(err => console.error("Error checking accounts:", err));
-      }
+      // 页面加载时初始化应用
+      window.addEventListener('DOMContentLoaded', initApp);
     </script>
   </body>
 </html>
