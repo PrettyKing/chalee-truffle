@@ -241,7 +241,7 @@
       }
 
       .hidden {
-        display: none;
+        display: none !important;
       }
 
       .button-container {
@@ -368,11 +368,11 @@
         <div class="section">
           <h3>Balance</h3>
           <div id="balanceContainer">
-            <div id="balanceLoading" class="loader-text hidden">
+            <div id="balanceLoading" class="loader-text">
               <div class="loading"></div>
               <span>Loading balance...</span>
             </div>
-            <div id="balance" class="balance-info">-</div>
+            <div id="balance" class="balance-info hidden">-</div>
           </div>
         </div>
         
@@ -576,6 +576,7 @@
       // 获取账户余额
       async function getBalance(account) {
         try {
+          // 显示加载中，隐藏余额
           balanceLoading.classList.remove("hidden");
           balanceElement.classList.add("hidden");
           
@@ -587,11 +588,16 @@
           const ethBalance = parseInt(balance, 16) / 1e18;
           balanceElement.innerText = `${ethBalance.toFixed(4)} ETH`;
           
-          balanceLoading.classList.add("hidden");
-          balanceElement.classList.remove("hidden");
+          // 延迟一下，确保加载动画显示完整
+          setTimeout(() => {
+            // 隐藏加载中，显示余额
+            balanceLoading.classList.add("hidden");
+            balanceElement.classList.remove("hidden");
+          }, 500);
         } catch (error) {
           console.error("获取余额失败:", error);
           balanceElement.innerText = "获取余额失败";
+          // 隐藏加载中，显示错误信息
           balanceLoading.classList.add("hidden");
           balanceElement.classList.remove("hidden");
         }
@@ -621,6 +627,10 @@
         connectButton.classList.remove("hidden");
         disconnectButton.classList.add("hidden");
         walletInfoCard.classList.add("hidden");
+        
+        // 重置余额显示状态
+        balanceLoading.classList.remove("hidden");
+        balanceElement.classList.add("hidden");
       }
       
       // 发送测试交易 (0 ETH到自己)
