@@ -323,6 +323,9 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        position: absolute;
+        top: 0;
+        right: 10px;
       }
 
       .owner-address {
@@ -372,19 +375,12 @@
         <button id="connectWallet">连接 MetaMask</button>
         <button id="disconnectWallet" class="hidden">断开连接</button>
         <div id="accountInfo" class="hidden"></div>
-        <div id="connectionStatus"></div>
+        <!-- <div id="connectionStatus"></div> -->
         <!-- 合约所有者 -->
         <div id="ownerInfo"></div>
 
         <!-- 合约余额 -->
         <div id="balanceDisplay"></div>
-      </div>
-
-      <!-- sayHi 测试 -->
-      <div class="section">
-        <h3>👋 Say Hi 测试</h3>
-        <button id="sayHiBtn">调用 sayHi()</button>
-        <div id="sayHiResult"></div>
       </div>
 
       <!-- 设置信息 -->
@@ -793,11 +789,7 @@
           $disconnectWalletBtn.removeClass("hidden");
           $accountInfo.removeClass("hidden");
           if ($contractTabs) $contractTabs.removeClass("hidden");
-          $accountInfo.text(
-            `已连接账户: ${currentAccount.slice(0, 6)}...${currentAccount.slice(
-              -4
-            )}`
-          );
+          $accountInfo.text(`已连接账户: ${currentAccount}`);
           if ($infoContractSection) $infoContractSection.removeClass("hidden");
         } else {
           $connectWalletBtn.removeClass("hidden");
@@ -845,25 +837,6 @@
           // 刷新余额和所有者信息
           getOwnerInfo();
           getContractBalance();
-        }
-      }
-
-      //===== InfoContract 功能 =====//
-
-      // sayHi 函数
-      async function callSayHi() {
-        if (!contract) {
-          showStatus($sayHiResult, "请先连接钱包", "error");
-          return;
-        }
-
-        try {
-          showStatus($sayHiResult, "正在调用 sayHi()...", "info");
-          const result = await contract.sayHi();
-          showStatus($sayHiResult, `sayHi() 返回: "${result}"`, "success");
-        } catch (error) {
-          console.error("调用 sayHi 失败:", error);
-          showStatus($sayHiResult, `调用失败: ${error.message}`, "error");
         }
       }
 
@@ -942,8 +915,6 @@
         }
       }
 
-      //===== PayableDemo 功能 =====//
-
       // 格式化ETH金额
       function formatEth(wei) {
         return ethers.formatEther(wei);
@@ -969,7 +940,6 @@
           const ownerDisplay = `
                         <div class="owner-info">
                           <div class="owner-address">
-                            合约所有者: ${owner.slice(0, 8)}...${owner.slice(-6)}
                             ${
                               isCurrentUserOwner
                                 ? '<span class="owner-badge">您是所有者</span>'
@@ -1212,7 +1182,6 @@
         });
 
         // InfoContract功能
-        $sayHiBtn.on("click", callSayHi);
         $setInfoBtn.on("click", setInfo);
         $getInfoBtn.on("click", getInfo);
 
