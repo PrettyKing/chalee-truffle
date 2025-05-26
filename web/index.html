@@ -646,108 +646,75 @@
           <div id="balanceDisplay"></div>
         </div>
       </div>
-
-      <!-- 合约选择选项卡 -->
-      <div id="contractTabs" class="contract-tabs hidden">
-        <div class="contract-tab active" data-contract="infoContract">
-          信息合约
-        </div>
-        <div class="contract-tab" data-contract="payableDemo">支付功能</div>
+      <!-- sayHi 测试 -->
+      <div class="section">
+        <div class="data-stream" style="animation-delay: 0.5s"></div>
+        <h3>👋 Say Hi 测试</h3>
+        <button id="sayHiBtn">调用 sayHi()</button>
+        <div id="sayHiResult"></div>
       </div>
 
-      <!-- InfoContract 交互部分 -->
-      <div id="infoContractSection" class="contract-content">
-        <!-- sayHi 测试 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 0.5s"></div>
-          <h3>👋 Say Hi 测试</h3>
-          <button id="sayHiBtn">调用 sayHi()</button>
-          <div id="sayHiResult"></div>
+      <!-- 设置信息 -->
+      <div class="section">
+        <div class="data-stream" style="animation-delay: 1s"></div>
+        <h3>📝 设置信息</h3>
+        <div>
+          <input type="text" id="nameInput" placeholder="输入姓名" />
+          <input type="number" id="ageInput" placeholder="输入年龄" />
+          <button id="setInfoBtn">设置信息</button>
         </div>
-
-        <!-- 设置信息 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1s"></div>
-          <h3>📝 设置信息</h3>
-          <div>
-            <input type="text" id="nameInput" placeholder="输入姓名" />
-            <input type="number" id="ageInput" placeholder="输入年龄" />
-            <button id="setInfoBtn">设置信息</button>
-          </div>
-          <div id="setInfoStatus"></div>
-        </div>
-
-        <!-- 获取信息 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1.5s"></div>
-          <h3>📋 获取信息</h3>
-          <button id="getInfoBtn">获取当前信息</button>
-          <div id="getInfoResult"></div>
-        </div>
-
-        <!-- 事件监听 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 2s"></div>
-          <h3>📡 信息合约事件监听</h3>
-          <button id="startListening">开始监听事件</button>
-          <button id="stopListening">停止监听</button>
-          <div id="eventLog"></div>
-        </div>
+        <div id="setInfoStatus"></div>
       </div>
 
-      <!-- PayableDemo 交互部分 -->
-      <div id="payableDemoSection" class="contract-content hidden">
-        <!-- 存款功能 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1s"></div>
-          <h3>📥 存入ETH</h3>
-          <div>
-            <input
-              type="number"
-              id="depositAmount"
-              placeholder="输入存款金额（ETH）"
-              step="0.001"
-              min="0.001"
-            />
-            <button id="depositBtn">存入</button>
-          </div>
-          <div id="depositStatus"></div>
-        </div>
+      <!-- 获取信息 -->
+      <div class="section">
+        <div class="data-stream" style="animation-delay: 1.5s"></div>
+        <h3>📋 获取信息</h3>
+        <button id="getInfoBtn">获取当前信息</button>
+        <div id="getInfoResult"></div>
+      </div>
 
-        <!-- 提款功能 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1.5s"></div>
-          <h3>📤 提取ETH</h3>
-          <div>
-            <input
-              type="number"
-              id="withdrawAmount"
-              placeholder="输入提取金额（ETH）"
-              step="0.001"
-              min="0.001"
-            />
-            <button id="withdrawBtn">提取</button>
-          </div>
-          <div id="withdrawStatus"></div>
+      <!-- 存款功能 -->
+      <div class="section">
+        <div class="data-stream" style="animation-delay: 1s"></div>
+        <h3>📥 存入ETH</h3>
+        <div>
+          <input
+            type="number"
+            id="depositAmount"
+            placeholder="输入存款金额（ETH）"
+            step="0.001"
+            min="0.001"
+          />
+          <button id="depositBtn">存入</button>
         </div>
+        <div id="depositStatus"></div>
+      </div>
 
-        <!-- 转移到所有者功能 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1.8s"></div>
-          <h3>🏆 转移到所有者</h3>
-          <div>
-            <button id="transferToOwnerBtn">转移所有余额到合约所有者</button>
-            <div id="transferToOwnerStatus"></div>
-          </div>
+      <!-- 提款功能 -->
+      <div class="section">
+        <div class="data-stream" style="animation-delay: 1.5s"></div>
+        <h3>📤 提取ETH</h3>
+        <div>
+          <input
+            type="number"
+            id="withdrawAmount"
+            placeholder="输入提取金额（ETH）"
+            step="0.001"
+            min="0.001"
+          />
+          <button id="withdrawBtn">提取</button>
         </div>
+        <div id="withdrawStatus"></div>
+      </div>
 
-        <!-- 支付事件监听 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 2s"></div>
-          <h3>📡 支付合约事件监听</h3>
-          <button id="startPayableListening">开始监听事件</button>
-          <button id="stopPayableListening">停止监听</button>
-          <div id="payableEventLog"></div>
+      <!-- 转移到所有者功能 -->
+      <div class="section">
+        <div class="data-stream" style="animation-delay: 1.8s"></div>
+        <h3>🏆 转移到所有者</h3>
+        <div>
+          <button id="transferToOwnerBtn">转移所有余额到合约所有者</button>
+          <div id="transferToOwnerStatus"></div>
         </div>
       </div>
     </div>
@@ -963,8 +930,6 @@
       const $setInfoStatus = $("#setInfoStatus");
       const $getInfoBtn = $("#getInfoBtn");
       const $getInfoResult = $("#getInfoResult");
-      const $startListeningBtn = $("#startListening");
-      const $stopListeningBtn = $("#stopListening");
       const $eventLog = $("#eventLog");
 
       // PayableDemo DOM元素
@@ -980,9 +945,6 @@
       const $withdrawStatus = $("#withdrawStatus");
       const $transferToOwnerBtn = $("#transferToOwnerBtn");
       const $transferToOwnerStatus = $("#transferToOwnerStatus");
-      const $startPayableListeningBtn = $("#startPayableListening");
-      const $stopPayableListeningBtn = $("#stopPayableListening");
-      const $payableEventLog = $("#payableEventLog");
 
       // 创建浮动粒子
       function createParticles() {
@@ -1147,7 +1109,6 @@
         clearStatus($depositStatus);
         clearStatus($withdrawStatus);
         clearStatus($transferToOwnerStatus);
-        clearStatus($payableEventLog);
       }
 
       // 切换合约视图
@@ -1553,92 +1514,6 @@
         }
       }
 
-      // 开始监听支付合约事件
-      function startPayableListening() {
-        if (!contract) {
-          showStatus($payableEventLog, "请先连接钱包", "error");
-          return;
-        }
-
-        if (depositEventListener || withdrawEventListener) {
-          showStatus($payableEventLog, "已在监听事件中...", "info");
-          return;
-        }
-
-        // 监听存款事件
-        depositEventListener = (sender, amount, event) => {
-          const timestamp = new Date().toLocaleString();
-          const amountInEth = formatEth(amount);
-          const isSelf =
-            sender.toLowerCase() === currentAccount.toLowerCase()
-              ? " (您)"
-              : "";
-
-          const eventInfo = `
-            <div class="status success">
-              [${timestamp}] 检测到 Deposit 事件<br>
-              发送者: ${sender.slice(0, 6)}...${sender.slice(-4)}${isSelf}<br>
-              金额: <span class="amount-highlight"><span class="eth-icon">Ξ</span>${amountInEth}</span> ETH<br>
-              交易哈希: ${
-                event.transactionHash || event.log?.transactionHash || "N/A"
-              }
-            </div>
-          `;
-          $payableEventLog.html(eventInfo + $payableEventLog.html());
-        };
-
-        // 监听提款事件
-        withdrawEventListener = (receiver, amount, event) => {
-          const timestamp = new Date().toLocaleString();
-          const amountInEth = formatEth(amount);
-          const isSelf =
-            receiver.toLowerCase() === currentAccount.toLowerCase()
-              ? " (您)"
-              : "";
-
-          const eventInfo = `
-            <div class="status success">
-              [${timestamp}] 检测到 Withdraw 事件<br>
-              接收者: ${receiver.slice(0, 6)}...${receiver.slice(
-            -4
-          )}${isSelf}<br>
-              金额: <span class="amount-highlight"><span class="eth-icon">Ξ</span>${amountInEth}</span> ETH<br>
-              交易哈希: ${
-                event.transactionHash || event.log?.transactionHash || "N/A"
-              }
-            </div>
-          `;
-          $payableEventLog.html(eventInfo + $payableEventLog.html());
-        };
-
-        contract.on("Deposit", depositEventListener);
-        contract.on("Withdraw", withdrawEventListener);
-        showStatus(
-          $payableEventLog,
-          "开始监听 Deposit 和 Withdraw 事件...",
-          "info"
-        );
-      }
-
-      // 停止监听支付合约事件
-      function stopPayableListening() {
-        if (contract) {
-          if (depositEventListener) {
-            contract.off("Deposit", depositEventListener);
-            depositEventListener = null;
-          }
-
-          if (withdrawEventListener) {
-            contract.off("Withdraw", withdrawEventListener);
-            withdrawEventListener = null;
-          }
-
-          showStatus($payableEventLog, "已停止监听事件", "info");
-        } else {
-          showStatus($payableEventLog, "当前没有在监听事件", "info");
-        }
-      }
-
       // 监听账户变化
       if (window.ethereum) {
         window.ethereum.on("accountsChanged", (accounts) => {
@@ -1673,16 +1548,12 @@
         $sayHiBtn.on("click", callSayHi);
         $setInfoBtn.on("click", setInfo);
         $getInfoBtn.on("click", getInfo);
-        $startListeningBtn.on("click", startInfoListening);
-        $stopListeningBtn.on("click", stopInfoListening);
 
         // PayableDemo功能
         $getBalanceBtn.on("click", getContractBalance);
         $depositBtn.on("click", depositEth);
         $withdrawBtn.on("click", withdrawEth);
         $transferToOwnerBtn.on("click", transferToOwner);
-        $startPayableListeningBtn.on("click", startPayableListening);
-        $stopPayableListeningBtn.on("click", stopPayableListening);
 
         // 页面加载完成后检查连接状态
         if (checkMetaMask()) {
