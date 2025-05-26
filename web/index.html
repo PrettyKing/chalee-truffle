@@ -1,696 +1,3 @@
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chalee DApp</title>
-    <script src="./node_modules/ethers/dist/ethers.umd.js"></script>
-    <script src="./node_modules/jquery/dist/jquery.min.js"></script>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
-        min-height: 100vh;
-        color: #ffffff;
-        overflow-x: hidden;
-        position: relative;
-      }
-
-      /* 动态背景 */
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: 
-          radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-          radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
-        z-index: -1;
-        animation: backgroundPulse 8s ease-in-out infinite alternate;
-      }
-
-      @keyframes backgroundPulse {
-        0% { opacity: 0.3; }
-        100% { opacity: 0.7; }
-      }
-
-      /* 浮动粒子背景效果 */
-      .particles {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-      }
-
-      .particle {
-        position: absolute;
-        background: linear-gradient(45deg, #00f5ff, #ff00ff);
-        border-radius: 50%;
-        animation: float 6s ease-in-out infinite;
-        opacity: 0.1;
-      }
-
-      .particle:nth-child(odd) {
-        animation-direction: reverse;
-      }
-
-      @keyframes float {
-        0%, 100% {
-          transform: translateY(0px) rotate(0deg);
-        }
-        50% {
-          transform: translateY(-20px) rotate(180deg);
-        }
-      }
-
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        position: relative;
-      }
-
-      h1 {
-        text-align: center;
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 40px;
-        background: linear-gradient(45deg, #00f5ff, #ff00ff, #00ff00);
-        background-size: 300% 300%;
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        animation: gradientShift 3s ease-in-out infinite;
-        text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
-      }
-
-      @keyframes gradientShift {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-      }
-
-      .section {
-        margin-bottom: 30px;
-        padding: 25px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        backdrop-filter: blur(20px);
-        box-shadow: 
-          0 8px 32px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
-        transition: left 0.5s;
-      }
-
-      .section:hover::before {
-        left: 100%;
-      }
-
-      .section:hover {
-        transform: translateY(-5px);
-        box-shadow: 
-          0 20px 40px rgba(0, 0, 0, 0.4),
-          0 0 20px rgba(0, 245, 255, 0.2);
-        border-color: rgba(0, 245, 255, 0.3);
-      }
-
-      .section h3 {
-        margin-bottom: 20px;
-        font-size: 1.4rem;
-        color: #00f5ff;
-        text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      /* 按钮样式 */
-      button {
-        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 50px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        margin: 8px;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      button::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: left 0.5s;
-      }
-
-      button:hover::before {
-        left: 100%;
-      }
-
-      button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-        background: linear-gradient(45deg, #764ba2 0%, #667eea 100%);
-      }
-
-      button:active {
-        transform: translateY(0);
-      }
-
-      button:disabled {
-        background: linear-gradient(45deg, #555, #777);
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      /* 特殊按钮样式 */
-      #connectWallet {
-        background: linear-gradient(45deg, #00f5ff, #0080ff);
-        box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4);
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0% { box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4); }
-        50% { box-shadow: 0 4px 25px rgba(0, 245, 255, 0.8); }
-        100% { box-shadow: 0 4px 15px rgba(0, 245, 255, 0.4); }
-      }
-
-      #disconnectWallet {
-        background: linear-gradient(45deg, #ff4757, #ff3838);
-        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-      }
-
-      /* 输入框样式 */
-      input[type='text'],
-      input[type='number'] {
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 15px;
-        padding: 12px 20px;
-        color: #ffffff;
-        font-size: 14px;
-        margin: 8px;
-        width: 220px;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-      }
-
-      input[type='text']:focus,
-      input[type='number']:focus {
-        outline: none;
-        border-color: #00f5ff;
-        box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
-        background: rgba(255, 255, 255, 0.15);
-      }
-
-      input::placeholder {
-        color: rgba(255, 255, 255, 0.6);
-      }
-
-      /* 状态消息样式 */
-      .status {
-        padding: 15px 20px;
-        margin: 15px 0;
-        border-radius: 15px;
-        backdrop-filter: blur(10px);
-        animation: slideIn 0.3s ease-out;
-        position: relative;
-        overflow: hidden;
-      }
-
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateX(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-
-      .success {
-        background: linear-gradient(45deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.2));
-        border: 1px solid rgba(0, 255, 0, 0.3);
-        color: #00ff88;
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
-      }
-
-      .error {
-        background: linear-gradient(45deg, rgba(255, 0, 0, 0.2), rgba(200, 0, 0, 0.2));
-        border: 1px solid rgba(255, 0, 0, 0.3);
-        color: #ff6b6b;
-        box-shadow: 0 0 20px rgba(255, 0, 0, 0.2);
-      }
-
-      .info {
-        background: linear-gradient(45deg, rgba(0, 245, 255, 0.2), rgba(0, 150, 255, 0.2));
-        border: 1px solid rgba(0, 245, 255, 0.3);
-        color: #00f5ff;
-        box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      #accountInfo {
-        font-weight: bold;
-        color: #00ff88;
-        text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        font-size: 1.1rem;
-        animation: glow 2s ease-in-out infinite alternate;
-      }
-
-      @keyframes glow {
-        from { text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
-        to { text-shadow: 0 0 20px rgba(0, 255, 136, 0.8), 0 0 30px rgba(0, 255, 136, 0.4); }
-      }
-
-      /* 加载动画 */
-      .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top-color: #00f5ff;
-        animation: spin 1s ease-in-out infinite;
-        margin-right: 10px;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      /* 响应式设计 */
-      @media (max-width: 768px) {
-        .container {
-          padding: 15px;
-        }
-
-        h1 {
-          font-size: 2rem;
-        }
-
-        .section {
-          padding: 20px;
-        }
-
-        input[type='text'],
-        input[type='number'] {
-          width: 100%;
-          margin: 5px 0;
-        }
-
-        button {
-          width: 100%;
-          margin: 5px 0;
-        }
-      }
-
-      /* 网格背景效果 */
-      .grid-background {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: 
-          linear-gradient(rgba(0, 245, 255, 0.1) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(0, 245, 255, 0.1) 1px, transparent 1px);
-        background-size: 50px 50px;
-        z-index: -2;
-        animation: gridMove 20s linear infinite;
-      }
-
-      @keyframes gridMove {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(50px, 50px); }
-      }
-
-      /* 特殊效果：数据流动画 */
-      .data-stream {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        width: 3px;
-        height: 30px;
-        background: linear-gradient(to bottom, transparent, #00f5ff, transparent);
-        animation: dataStream 2s linear infinite;
-        opacity: 0.6;
-      }
-
-      @keyframes dataStream {
-        0% { transform: translateY(-100px); opacity: 0; }
-        50% { opacity: 1; }
-        100% { transform: translateY(200px); opacity: 0; }
-      }
-
-      /* 连接状态指示器 */
-      .connection-indicator {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: #ff4757;
-        box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
-        z-index: 1000;
-        transition: all 0.3s ease;
-      }
-
-      .connection-indicator.connected {
-        background: #00ff88;
-        box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        animation: connectionPulse 2s infinite;
-      }
-
-      @keyframes connectionPulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-      }
-
-      /* 合约选择器样式 */
-      .contract-tabs {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 30px;
-      }
-
-      .contract-tab {
-        padding: 12px 25px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 50px;
-        margin: 0 10px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.7);
-      }
-
-      .contract-tab.active {
-        background: linear-gradient(45deg, rgba(0, 245, 255, 0.2), rgba(0, 150, 255, 0.2));
-        border-color: rgba(0, 245, 255, 0.3);
-        color: #00f5ff;
-        box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
-      }
-
-      .contract-tab:hover:not(.active) {
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-      }
-
-      /* 余额显示样式 */
-      .balance-display {
-        background: linear-gradient(45deg, rgba(255, 215, 0, 0.2), rgba(218, 165, 32, 0.2));
-        border: 1px solid rgba(255, 215, 0, 0.3);
-        color: #ffd700;
-        padding: 15px;
-        border-radius: 15px;
-        text-align: center;
-        margin: 15px 0;
-        font-size: 1.2rem;
-        font-weight: 600;
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-      }
-
-      /* 金额高亮样式 */
-      .amount-highlight {
-        color: #ffd700;
-        font-weight: bold;
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-      }
-
-      /* ETH图标 */
-      .eth-icon {
-        font-size: 1.2em;
-        margin-right: 5px;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- 背景效果 -->
-    <div class="grid-background"></div>
-    <div class="particles" id="particles"></div>
-    <div class="connection-indicator" id="connectionIndicator"></div>
-
-    <div class="container">
-      <h1>Chalee DApp</h1>
-
-      <!-- 钱包连接部分 -->
-      <div class="section">
-        <div class="data-stream"></div>
-        <h3>🔗 钱包连接</h3>
-        <button id="connectWallet">连接 MetaMask</button>
-        <button id="disconnectWallet" class="hidden">断开连接</button>
-        <div id="accountInfo" class="hidden"></div>
-        <div id="connectionStatus"></div>
-      </div>
-
-      <!-- 合约选择选项卡 -->
-      <div id="contractTabs" class="contract-tabs hidden">
-        <div class="contract-tab active" data-contract="infoContract">信息合约</div>
-        <div class="contract-tab" data-contract="payableDemo">支付演示</div>
-      </div>
-
-      <!-- InfoContract 交互部分 -->
-      <div id="infoContractSection" class="contract-content">
-        <!-- sayHi 测试 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 0.5s;"></div>
-          <h3>👋 Say Hi 测试</h3>
-          <button id="sayHiBtn">调用 sayHi()</button>
-          <div id="sayHiResult"></div>
-        </div>
-
-        <!-- 设置信息 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1s;"></div>
-          <h3>📝 设置信息</h3>
-          <div>
-            <input type="text" id="nameInput" placeholder="输入姓名" />
-            <input type="number" id="ageInput" placeholder="输入年龄" />
-            <button id="setInfoBtn">设置信息</button>
-          </div>
-          <div id="setInfoStatus"></div>
-        </div>
-
-        <!-- 获取信息 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1.5s;"></div>
-          <h3>📋 获取信息</h3>
-          <button id="getInfoBtn">获取当前信息</button>
-          <div id="getInfoResult"></div>
-        </div>
-
-        <!-- 事件监听 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 2s;"></div>
-          <h3>📡 信息合约事件监听</h3>
-          <button id="startListening">开始监听事件</button>
-          <button id="stopListening">停止监听</button>
-          <div id="eventLog"></div>
-        </div>
-      </div>
-
-      <!-- PayableDemo 交互部分 -->
-      <div id="payableDemoSection" class="contract-content hidden">
-        <!-- 合约余额 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 0.5s;"></div>
-          <h3>💰 合约余额</h3>
-          <button id="getBalanceBtn">查询合约余额</button>
-          <div id="balanceDisplay"></div>
-        </div>
-
-        <!-- 存款功能 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1s;"></div>
-          <h3>📥 存入ETH</h3>
-          <div>
-            <input type="number" id="depositAmount" placeholder="输入存款金额（ETH）" step="0.001" min="0.001" />
-            <button id="depositBtn">存入</button>
-          </div>
-          <div id="depositStatus"></div>
-        </div>
-
-        <!-- 提款功能 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 1.5s;"></div>
-          <h3>📤 提取ETH</h3>
-          <div>
-            <input type="number" id="withdrawAmount" placeholder="输入提取金额（ETH）" step="0.001" min="0.001" />
-            <button id="withdrawBtn">提取</button>
-          </div>
-          <div id="withdrawStatus"></div>
-        </div>
-
-        <!-- 支付事件监听 -->
-        <div class="section">
-          <div class="data-stream" style="animation-delay: 2s;"></div>
-          <h3>📡 支付合约事件监听</h3>
-          <button id="startPayableListening">开始监听事件</button>
-          <button id="stopPayableListening">停止监听</button>
-          <div id="payableEventLog"></div>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      // 合约配置
-      const INFO_CONTRACT_ADDRESS = '0x8a4297BeE2698CAbAB2ed55B43e0c43a962959Dd';
-      const INFO_CONTRACT_ABI = [
-        {
-          inputs: [
-            { internalType: 'string', name: '_name', type: 'string' },
-            { internalType: 'uint256', name: '_age', type: 'uint256' },
-          ],
-          name: 'setInfo',
-          outputs: [],
-          stateMutability: 'nonpayable',
-          type: 'function',
-        },
-        {
-          inputs: [],
-          name: 'sayHi',
-          outputs: [{ internalType: 'string', name: '', type: 'string' }],
-          stateMutability: 'pure',
-          type: 'function',
-        },
-        {
-          inputs: [],
-          name: 'getInfo',
-          outputs: [
-            { internalType: 'string', name: '', type: 'string' },
-            { internalType: 'uint256', name: '', type: 'uint256' },
-          ],
-          stateMutability: 'view',
-          type: 'function',
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: 'string',
-              name: 'name',
-              type: 'string',
-            },
-            {
-              indexed: false,
-              internalType: 'uint256',
-              name: 'age',
-              type: 'uint256',
-            },
-          ],
-          name: 'Instructor',
-          type: 'event',
-        },
-      ];
-
-      // PayableDemo合约配置
-      const PAYABLE_CONTRACT_ADDRESS = '0xA2e58Fa96D1e7B75693a2B7AE05CD39dAe50fcBC'; // 部署后需要替换为实际地址
-      const PAYABLE_CONTRACT_ABI = [
-        {
-          inputs: [],
-          name: 'deposit',
-          outputs: [],
-          stateMutability: 'payable',
-          type: 'function',
-        },
-        {
-          inputs: [{ internalType: 'uint256', name: 'amount', type: 'uint256' }],
-          name: 'withdraw',
-          outputs: [],
-          stateMutability: 'nonpayable',
-          type: 'function',
-        },
-        {
-          inputs: [],
-          name: 'getBalance',
-          outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
-          stateMutability: 'view',
-          type: 'function',
-        },
-        {
-          anonymous: false,
-          inputs: [
-            { indexed: true, internalType: 'address', name: 'sender', type: 'address' },
-            { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' }
-          ],
-          name: 'Deposit',
-          type: 'event',
-        },
-        {
-          anonymous: false,
-          inputs: [
-            { indexed: true, internalType: 'address', name: 'receiver', type: 'address' },
-            { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' }
-          ],
-          name: 'Withdraw',
-          type: 'event',
-        }
-      ];
-
-      // 全局变量
-      let provider = null;
-      let signer = null;
-      let infoContract = null;
-      let payableContract = null;
-      let currentAccount = null;
-      let infoEventListener = null;
-      let depositEventListener = null;
-      let withdrawEventListener = null;
-      let activeContract = 'infoContract';
-
-      // DOM 元素
-      const $connectWalletBtn = $('#connectWallet');
-      const $disconnectWalletBtn = $('#disconnectWallet');
-      const $accountInfo = $('#accountInfo');
-      const $connectionStatus = $('#connectionStatus');
-      const $contractTabs = $('#contractTabs');
-      const $connectionIndicator = $('#connectionIndicator');
-
       // InfoContract DOM元素
       const $infoContractSection = $('#infoContractSection');
       const $sayHiBtn = $('#sayHiBtn');
@@ -707,6 +14,7 @@
 
       // PayableDemo DOM元素
       const $payableDemoSection = $('#payableDemoSection');
+      const $ownerInfo = $('#ownerInfo');
       const $getBalanceBtn = $('#getBalanceBtn');
       const $balanceDisplay = $('#balanceDisplay');
       const $depositAmount = $('#depositAmount');
@@ -715,6 +23,8 @@
       const $withdrawAmount = $('#withdrawAmount');
       const $withdrawBtn = $('#withdrawBtn');
       const $withdrawStatus = $('#withdrawStatus');
+      const $transferToOwnerBtn = $('#transferToOwnerBtn');
+      const $transferToOwnerStatus = $('#transferToOwnerStatus');
       const $startPayableListeningBtn = $('#startPayableListening');
       const $stopPayableListeningBtn = $('#stopPayableListening');
       const $payableEventLog = $('#payableEventLog');
@@ -783,13 +93,16 @@
           currentAccount = accounts[0];
           provider = new ethers.BrowserProvider(window.ethereum);
           signer = await provider.getSigner();
-          // 初始化InfoContract
-          infoContract = new ethers.Contract(INFO_CONTRACT_ADDRESS, INFO_CONTRACT_ABI, signer);
-          // 初始化PayableContract
-          payableContract = new ethers.Contract(PAYABLE_CONTRACT_ADDRESS, PAYABLE_CONTRACT_ABI, signer);
+          
+          // 初始化合约
+          contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
           updateConnectionUI(true);
           updateConnectionIndicator(true);
           showStatus($connectionStatus, '钱包连接成功！', 'success');
+          
+          // 获取合约所有者信息
+          getOwnerInfo();
         } catch (error) {
           console.error('连接钱包失败:', error);
           showStatus($connectionStatus, `连接失败: ${error.message}`, 'error');
@@ -801,8 +114,7 @@
       function disconnectWallet() {
         provider = null;
         signer = null;
-        infoContract = null;
-        payableContract = null;
+        contract = null;
         currentAccount = null;
 
         // 停止所有事件监听
@@ -816,19 +128,19 @@
 
       // 停止所有事件监听
       function stopAllEventListeners() {
-        if (infoEventListener && infoContract) {
-          infoContract.off('Instructor', infoEventListener);
-          infoEventListener = null;
-        }
-        
-        if (payableContract) {
+        if (contract) {
+          if (infoEventListener) {
+            contract.off('Instructor', infoEventListener);
+            infoEventListener = null;
+          }
+          
           if (depositEventListener) {
-            payableContract.off('Deposit', depositEventListener);
+            contract.off('Deposit', depositEventListener);
             depositEventListener = null;
           }
           
           if (withdrawEventListener) {
-            payableContract.off('Withdraw', withdrawEventListener);
+            contract.off('Withdraw', withdrawEventListener);
             withdrawEventListener = null;
           }
         }
@@ -842,6 +154,7 @@
           $accountInfo.removeClass('hidden');
           $contractTabs.removeClass('hidden');
           $accountInfo.text(`已连接账户: ${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`);
+          $infoContractSection.removeClass('hidden');
         } else {
           $connectWalletBtn.removeClass('hidden');
           $disconnectWalletBtn.addClass('hidden');
@@ -861,9 +174,11 @@
         clearStatus($eventLog);
         
         // 清除PayableDemo相关状态
+        clearStatus($ownerInfo);
         clearStatus($balanceDisplay);
         clearStatus($depositStatus);
         clearStatus($withdrawStatus);
+        clearStatus($transferToOwnerStatus);
         clearStatus($payableEventLog);
       }
 
@@ -881,6 +196,10 @@
           $payableDemoSection.removeClass('hidden');
           $('.contract-tab[data-contract="infoContract"]').removeClass('active');
           $('.contract-tab[data-contract="payableDemo"]').addClass('active');
+          
+          // 刷新余额和所有者信息
+          getOwnerInfo();
+          getContractBalance();
         }
       }
 
@@ -888,14 +207,14 @@
 
       // sayHi 函数
       async function callSayHi() {
-        if (!infoContract) {
+        if (!contract) {
           showStatus($sayHiResult, '请先连接钱包', 'error');
           return;
         }
 
         try {
           showStatus($sayHiResult, '正在调用 sayHi()...', 'info');
-          const result = await infoContract.sayHi();
+          const result = await contract.sayHi();
           showStatus($sayHiResult, `sayHi() 返回: "${result}"`, 'success');
         } catch (error) {
           console.error('调用 sayHi 失败:', error);
@@ -905,7 +224,7 @@
 
       // 设置信息
       async function setInfo() {
-        if (!infoContract) {
+        if (!contract) {
           showStatus($setInfoStatus, '请先连接钱包', 'error');
           return;
         }
@@ -921,7 +240,7 @@
         try {
           showStatus($setInfoStatus, '正在设置信息...', 'info');
 
-          const tx = await infoContract.setInfo(name, age);
+          const tx = await contract.setInfo(name, age);
           showStatus($setInfoStatus, `交易已发送，交易哈希: ${tx.hash}`, 'info');
 
           const receipt = await tx.wait();
@@ -945,14 +264,14 @@
 
       // 获取信息
       async function getInfo() {
-        if (!infoContract) {
+        if (!contract) {
           showStatus($getInfoResult, '请先连接钱包', 'error');
           return;
         }
 
         try {
           showStatus($getInfoResult, '正在获取信息...', 'info');
-          const result = await infoContract.getInfo();
+          const result = await contract.getInfo();
           const [name, age] = result;
 
           if (name && age.toString() !== '0') {
@@ -968,7 +287,7 @@
 
       // 开始监听信息合约事件
       function startInfoListening() {
-        if (!infoContract) {
+        if (!contract) {
           showStatus($eventLog, '请先连接钱包', 'error');
           return;
         }
@@ -993,14 +312,14 @@
           $eventLog.html(eventInfo + $eventLog.html());
         };
 
-        infoContract.on('Instructor', infoEventListener);
+        contract.on('Instructor', infoEventListener);
         showStatus($eventLog, '开始监听 Instructor 事件...', 'info');
       }
 
       // 停止监听信息合约事件
       function stopInfoListening() {
-        if (infoEventListener && infoContract) {
-          infoContract.off('Instructor', infoEventListener);
+        if (infoEventListener && contract) {
+          contract.off('Instructor', infoEventListener);
           infoEventListener = null;
           showStatus($eventLog, '已停止监听事件', 'info');
         } else {
@@ -1020,16 +339,57 @@
         return ethers.parseEther(eth.toString());
       }
 
+      // 获取合约所有者信息
+      async function getOwnerInfo() {
+        if (!contract) {
+          showStatus($ownerInfo, '请先连接钱包', 'error');
+          return;
+        }
+
+        try {
+          const owner = await contract.owner();
+          
+          const isCurrentUserOwner = owner.toLowerCase() === currentAccount.toLowerCase();
+          const ownerDisplay = `
+            <div class="owner-info">
+              <div class="owner-address">
+                合约所有者: ${owner.slice(0, 8)}...${owner.slice(-6)}
+                ${isCurrentUserOwner ? '<span class="owner-badge">您是所有者</span>' : ''}
+              </div>
+              <div>
+                ${isCurrentUserOwner ? 
+                  '<div style="color: #ffd700; font-size: 0.85rem;">您可以执行所有者特权操作</div>' : 
+                  '<div style="color: #ff6b6b; font-size: 0.85rem;">您不是合约所有者</div>'}
+              </div>
+            </div>
+          `;
+          
+          $ownerInfo.html(ownerDisplay);
+          
+          // 如果当前用户不是所有者，禁用转移到所有者按钮
+          if (!isCurrentUserOwner) {
+            $transferToOwnerBtn.prop('disabled', true);
+            $transferToOwnerBtn.css('opacity', 0.5);
+          } else {
+            $transferToOwnerBtn.prop('disabled', false);
+            $transferToOwnerBtn.css('opacity', 1);
+          }
+        } catch (error) {
+          console.error('获取所有者信息失败:', error);
+          showStatus($ownerInfo, `获取所有者信息失败: ${error.message}`, 'error');
+        }
+      }
+
       // 获取合约余额
       async function getContractBalance() {
-        if (!payableContract) {
+        if (!contract) {
           showStatus($balanceDisplay, '请先连接钱包', 'error');
           return;
         }
 
         try {
           showStatus($balanceDisplay, '正在查询合约余额...', 'info');
-          const balance = await payableContract.getBalance();
+          const balance = await contract.getBalance();
           
           const balanceInEth = formatEth(balance);
           $balanceDisplay.html(`
@@ -1045,7 +405,7 @@
 
       // 存入ETH
       async function depositEth() {
-        if (!payableContract) {
+        if (!contract) {
           showStatus($depositStatus, '请先连接钱包', 'error');
           return;
         }
@@ -1061,7 +421,7 @@
           showStatus($depositStatus, `正在存入 ${amount} ETH...`, 'info');
           
           const amountWei = parseEth(amount);
-          const tx = await payableContract.deposit({ value: amountWei });
+          const tx = await contract.deposit({ value: amountWei });
           
           showStatus($depositStatus, `交易已发送，交易哈希: ${tx.hash}`, 'info');
 
@@ -1088,7 +448,7 @@
 
       // 提取ETH
       async function withdrawEth() {
-        if (!payableContract) {
+        if (!contract) {
           showStatus($withdrawStatus, '请先连接钱包', 'error');
           return;
         }
@@ -1104,7 +464,7 @@
           showStatus($withdrawStatus, `正在提取 ${amount} ETH...`, 'info');
           
           const amountWei = parseEth(amount);
-          const tx = await payableContract.withdraw(amountWei);
+          const tx = await contract.withdraw(amountWei);
           
           showStatus($withdrawStatus, `交易已发送，交易哈希: ${tx.hash}`, 'info');
 
@@ -1131,9 +491,44 @@
         }
       }
 
+      // 转移到所有者
+      async function transferToOwner() {
+        if (!contract) {
+          showStatus($transferToOwnerStatus, '请先连接钱包', 'error');
+          return;
+        }
+
+        try {
+          showStatus($transferToOwnerStatus, '正在转移资金到所有者...', 'info');
+          
+          const tx = await contract.transferToOwner();
+          
+          showStatus($transferToOwnerStatus, `交易已发送，交易哈希: ${tx.hash}`, 'info');
+
+          const receipt = await tx.wait();
+          showStatus($transferToOwnerStatus, `转移成功！区块号: ${receipt.blockNumber}`, 'success');
+          
+          // 刷新余额
+          getContractBalance();
+        } catch (error) {
+          console.error('转移失败:', error);
+          let errorMessage = error.message;
+
+          if (error.code === 'ACTION_REJECTED') {
+            errorMessage = '用户拒绝了交易';
+          } else if (error.message.includes('Only the owner')) {
+            errorMessage = '只有合约所有者才能执行此操作';
+          } else if (error.message.includes('No balance')) {
+            errorMessage = '合约没有余额可转移';
+          }
+
+          showStatus($transferToOwnerStatus, `转移失败: ${errorMessage}`, 'error');
+        }
+      }
+
       // 开始监听支付合约事件
       function startPayableListening() {
-        if (!payableContract) {
+        if (!contract) {
           showStatus($payableEventLog, '请先连接钱包', 'error');
           return;
         }
@@ -1177,21 +572,21 @@
           $payableEventLog.html(eventInfo + $payableEventLog.html());
         };
 
-        payableContract.on('Deposit', depositEventListener);
-        payableContract.on('Withdraw', withdrawEventListener);
+        contract.on('Deposit', depositEventListener);
+        contract.on('Withdraw', withdrawEventListener);
         showStatus($payableEventLog, '开始监听 Deposit 和 Withdraw 事件...', 'info');
       }
 
       // 停止监听支付合约事件
       function stopPayableListening() {
-        if (payableContract) {
+        if (contract) {
           if (depositEventListener) {
-            payableContract.off('Deposit', depositEventListener);
+            contract.off('Deposit', depositEventListener);
             depositEventListener = null;
           }
           
           if (withdrawEventListener) {
-            payableContract.off('Withdraw', withdrawEventListener);
+            contract.off('Withdraw', withdrawEventListener);
             withdrawEventListener = null;
           }
           
@@ -1242,6 +637,7 @@
         $getBalanceBtn.on('click', getContractBalance);
         $depositBtn.on('click', depositEth);
         $withdrawBtn.on('click', withdrawEth);
+        $transferToOwnerBtn.on('click', transferToOwner);
         $startPayableListeningBtn.on('click', startPayableListening);
         $stopPayableListeningBtn.on('click', stopPayableListening);
 
