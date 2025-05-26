@@ -578,7 +578,7 @@
 
     <script>
       // 合约配置
-      const INFO_CONTRACT_ADDRESS = '0xc61fE0e083da996EB5b2283c797aF6991E753249';
+      const INFO_CONTRACT_ADDRESS = '0x8a4297BeE2698CAbAB2ed55B43e0c43a962959Dd';
       const INFO_CONTRACT_ABI = [
         {
           inputs: [
@@ -629,7 +629,7 @@
       ];
 
       // PayableDemo合约配置
-      const PAYABLE_CONTRACT_ADDRESS = '0x780C428BFF23f93a43B9C5AE8F9C711B320E157A'; // 部署后需要替换为实际地址
+      const PAYABLE_CONTRACT_ADDRESS = '0xA2e58Fa96D1e7B75693a2B7AE05CD39dAe50fcBC'; // 部署后需要替换为实际地址
       const PAYABLE_CONTRACT_ABI = [
         {
           inputs: [],
@@ -783,13 +783,10 @@
           currentAccount = accounts[0];
           provider = new ethers.BrowserProvider(window.ethereum);
           signer = await provider.getSigner();
-          
           // 初始化InfoContract
           infoContract = new ethers.Contract(INFO_CONTRACT_ADDRESS, INFO_CONTRACT_ABI, signer);
-          
           // 初始化PayableContract
           payableContract = new ethers.Contract(PAYABLE_CONTRACT_ADDRESS, PAYABLE_CONTRACT_ABI, signer);
-
           updateConnectionUI(true);
           updateConnectionIndicator(true);
           showStatus($connectionStatus, '钱包连接成功！', 'success');
