@@ -95,6 +95,9 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         font-size: 0.95rem;
         margin-bottom: 20px;
+        position: absolute;
+        top: 20px;
+        right: 20px;
       }
 
       .status-dot {
@@ -523,16 +526,15 @@
       <div class="header">
         <h1>Chalee DApp</h1>
         <p class="subtitle">现代化的以太坊智能合约交互平台</p>
-        
+      </div>
+
+      <!-- 钱包连接卡片 -->
+      <div class="card glass" style="margin-bottom: 20px;">
         <!-- 连接状态指示器 -->
         <div class="connection-status">
           <div class="status-dot" id="statusDot"></div>
           <span id="connectionText">未连接</span>
         </div>
-      </div>
-
-      <!-- 钱包连接卡片 -->
-      <div class="card glass">
         <h3><span class="card-icon">🔗</span>钱包连接</h3>
         <div class="input-group">
           <div class="input-row">
