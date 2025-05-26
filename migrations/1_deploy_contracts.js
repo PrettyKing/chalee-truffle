@@ -1,7 +1,5 @@
-const InfoContract = artifacts.require('InfoContract');
-const PayableDemo = artifacts.require('PayableDemo');
+const InfoContractAndPayable = artifacts.require('InfoContractAndPayable');
 
 module.exports = function (deployer) {
-  deployer.deploy(InfoContract);
-  deployer.deploy(PayableDemo);
+  deployer.deploy(InfoContractAndPayable);
 };
