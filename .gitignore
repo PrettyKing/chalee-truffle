@@ -3,6 +3,7 @@
 .DS_Store
 .idea
 .vscode
+.env
 
 # npm
 node_modules
