@@ -3,7 +3,7 @@ import {
   getDefaultWallets,
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
-import { configureChains, createConfig, WagmiConfig } from 'wagmi';
+import { Chain, configureChains, createConfig, WagmiConfig } from 'wagmi';
 import {
   mainnet,
   polygon,
@@ -18,8 +18,30 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import RedPacketApp from './components/RedPacketApp';
 
+
+// 本地开发
+const localChain:Chain = {
+  id: 1337,
+  name: 'Localhost',
+  rpcUrls: {
+    default: { http: ['http://localhost:7545'] },
+    public: { http: ['http://localhost:7545'] },
+  },
+  nativeCurrency: {
+    name: 'Ether',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  blockExplorers: {
+    default: { name: 'Localhost', url: 'http://localhost:7545' },
+  },
+  testnet: true,
+  network: 'localhost',
+};
+
+
 const { chains, publicClient } = configureChains(
-  [mainnet, polygon, optimism, arbitrum, goerli, sepolia],
+  [mainnet, polygon, optimism, arbitrum, goerli, sepolia, localChain],
   [
     alchemyProvider({ apiKey: import.meta.env.VITE_REACT_APP_ALCHEMY_ID }),
     publicProvider()

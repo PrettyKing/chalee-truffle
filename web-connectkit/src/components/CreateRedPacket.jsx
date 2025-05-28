@@ -12,6 +12,11 @@ export default function CreateRedPacket({ onCreateRedPacket, isLoading }) {
       alert("请填写完整信息");
       return;
     }
+    console.log("创建红包参数:", {
+      amount,
+      count,
+      isEqual,
+    });
 
     try {
       onCreateRedPacket({
@@ -39,18 +44,18 @@ export default function CreateRedPacket({ onCreateRedPacket, isLoading }) {
             step="0.0001"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-20 text-white placeholder-white placeholder-opacity-70 border border-white border-opacity-30 focus:ring-2 focus:ring-white focus:ring-opacity-50"
+            className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-20 placeholder-white placeholder-opacity-70 border border-white border-opacity-30 focus:ring-2 focus:ring-white focus:ring-opacity-50"
             placeholder="请输入红包总金额"
           />
         </div>
         <div>
-          <label className="block text-white font-bold mb-2">红包个数</label>
+          <label className="block font-bold mb-2">红包个数</label>
           <input
             type="number"
             min="1"
             value={count}
             onChange={(e) => setCount(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-20 text-white placeholder-white placeholder-opacity-70 border border-white border-opacity-30 focus:ring-2 focus:ring-white focus:ring-opacity-50"
+            className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-20 placeholder-white placeholder-opacity-70 border border-white border-opacity-30 focus:ring-2 focus:ring-white focus:ring-opacity-50"
             placeholder="请输入红包个数"
           />
         </div>
