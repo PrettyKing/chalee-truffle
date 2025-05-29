@@ -1,7 +1,7 @@
-const InfoContractAndPayable = artifacts.require('InfoContractAndPayable');
-const RedPacket = artifacts.require('RedPacket');
+const InfoContractAndPayableAndRedPacket = artifacts.require(
+  "InfoContractAndPayableAndRedPacket"
+);
 
 module.exports = function (deployer) {
-  deployer.deploy(InfoContractAndPayable);
-  deployer.deploy(RedPacket);
+  deployer.deploy(InfoContractAndPayableAndRedPacket);
 };
