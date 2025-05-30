@@ -3,9 +3,12 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// 根据环境导入配置
-import { config } from "./wagmi.local";
-// import { config } from "./wagmi.prod"; // 生产环境时使用
+// 根据环境自动导入配置
+const isProduction = import.meta.env.PROD;
+const config = await (isProduction 
+  ? import("./wagmi.prod").then(m => m.config)
+  : import("./wagmi.local").then(m => m.config)
+);
 
 import RedPacketApp from "./components/RedPacketApp";
 
