@@ -954,6 +954,7 @@
 
         try {
           const latestPacketId = await contract.packetId();
+          console.log("autoQueryLatestPacket最新红包ID:", latestPacketId);
           if (latestPacketId > 0) {
             const targetId = latestPacketId - 1; // packetId是下一个要创建的ID，所以减1
             elements.queryPacketIdInput.val(targetId);
@@ -1657,8 +1658,10 @@
 
         try {
           const latestPacketId = await contract.packetId();
-          if (latestPacketId > 0) {
-            const targetId = latestPacketId - 1; // packetId是下一个要创建的ID，所以减1
+          console.log("autoQueryLatestPacket最新红包ID:", Number(latestPacketId));
+          // 格式化红包ID为最新的红包ID - 1
+          if (Number(latestPacketId) > 0) {
+            const targetId = Number(latestPacketId) - 1; // packetId是下一个要创建的ID，所以减1
             elements.queryPacketIdInput.val(targetId);
             await queryRedPacket();
           }
@@ -1762,7 +1765,7 @@
           );
 
           // 获取最新的红包ID
-          const latestPacketId = await contract.packetId();
+          const latestPacketId = Number(await contract.packetId());
 
           if (latestPacketId === 0) {
             elements.redPacketHistory.html(
@@ -1776,8 +1779,11 @@
           // 加载最近的10个红包（或全部，如果少于10个）
           const maxHistory = Math.min(latestPacketId, 10);
 
+          console.log("加载红包历史，最新红包ID:", latestPacketId);
+          console.log("加载红包历史，最大历史数量:", maxHistory);
+
           for (
-            let i = latestPacketId - 1;
+            let i = latestPacketId-1;
             i >= Math.max(0, latestPacketId - maxHistory);
             i--
           ) {
@@ -1832,6 +1838,7 @@
                     <div class="progress-fill-small" style="width: ${progressPercent}%"></div>
                   </div>
                 </div>
+                <hr/>
               `;
             } catch (error) {
               console.error(`加载红包 #${i} 失败:`, error);
