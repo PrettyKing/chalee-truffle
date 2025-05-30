@@ -1,5 +1,729 @@
-    <script src="./node_modules/ethers/dist/ethers.umd.js"></script>
-    <script src="./node_modules/jquery/dist/jquery.min.js"></script>
-    <link rel="stylesheet" href="./index.css" />
-    <link rel="stylesheet" href="./red-packet-styles.css" />
-    <script src="./index.js"></script>
+            </div>
+          `);
+        } catch (error) {
+          console.error("获取余额失败:", error);
+          showStatus(
+            elements.balanceDisplay,
+            `获取余额失败: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      // 设置信息
+      async function setInfo() {
+        if (!contract) {
+          showStatus(elements.setInfoStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        const name = elements.nameInput.val().trim();
+        const age = parseInt(elements.ageInput.val());
+
+        if (!name || isNaN(age) || age < 0) {
+          showStatus(elements.setInfoStatus, "请输入有效的姓名和年龄", "error");
+          return;
+        }
+
+        try {
+          showStatus(elements.setInfoStatus, "正在设置信息...", "info", true);
+
+          const tx = await contract.setInfo(name, age);
+          showStatus(
+            elements.setInfoStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          showStatus(
+            elements.setInfoStatus,
+            `设置成功！区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+
+          elements.nameInput.val("");
+          elements.ageInput.val("");
+        } catch (error) {
+          console.error("设置信息失败:", error);
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.code === "INSUFFICIENT_FUNDS") {
+            errorMessage = "余额不足支付 Gas 费用";
+          }
+
+          showStatus(
+            elements.setInfoStatus,
+            `设置失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
+      // 获取信息
+      async function getInfo() {
+        if (!contract) {
+          showStatus(elements.getInfoResult, "请先连接钱包", "error");
+          return;
+        }
+
+        try {
+          showStatus(elements.getInfoResult, "正在获取信息...", "info", true);
+          const result = await contract.getInfo();
+          const [name, age] = result;
+
+          if (name && age.toString() !== "0") {
+            showStatus(
+              elements.getInfoResult,
+              `当前信息 - 姓名: "${name}", 年龄: ${age.toString()}`,
+              "success"
+            );
+          } else {
+            showStatus(elements.getInfoResult, "暂无信息或信息为空", "warning");
+          }
+        } catch (error) {
+          console.error("获取信息失败:", error);
+          showStatus(
+            elements.getInfoResult,
+            `获取失败: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      // 存入ETH
+      async function depositEth() {
+        if (!contract) {
+          showStatus(elements.depositStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        const amount = elements.depositAmount.val();
+
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+          showStatus(elements.depositStatus, "请输入有效的存款金额", "error");
+          return;
+        }
+
+        try {
+          showStatus(
+            elements.depositStatus,
+            `正在存入 ${amount} ETH...`,
+            "info",
+            true
+          );
+
+          const amountWei = parseEth(amount);
+          const tx = await contract.deposit({ value: amountWei });
+
+          showStatus(
+            elements.depositStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          showStatus(
+            elements.depositStatus,
+            `存款成功！区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+
+          elements.depositAmount.val("");
+          await getContractBalance();
+        } catch (error) {
+          console.error("存款失败:", error);
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.code === "INSUFFICIENT_FUNDS") {
+            errorMessage = "余额不足支付交易费用";
+          }
+
+          showStatus(
+            elements.depositStatus,
+            `存款失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
+      // 提取ETH
+      async function withdrawEth() {
+        if (!contract) {
+          showStatus(elements.withdrawStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        const amount = elements.withdrawAmount.val();
+
+        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+          showStatus(elements.withdrawStatus, "请输入有效的提取金额", "error");
+          return;
+        }
+
+        try {
+          showStatus(
+            elements.withdrawStatus,
+            `正在提取 ${amount} ETH...`,
+            "info",
+            true
+          );
+
+          const amountWei = parseEth(amount);
+          const tx = await contract.withdraw(amountWei);
+
+          showStatus(
+            elements.withdrawStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          showStatus(
+            elements.withdrawStatus,
+            `提取成功！区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+
+          elements.withdrawAmount.val("");
+          await getContractBalance();
+        } catch (error) {
+          console.error("提取失败:", error);
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.code === "INSUFFICIENT_FUNDS") {
+            errorMessage = "余额不足支付 Gas 费用";
+          } else if (error.message.includes("Insufficient balance")) {
+            errorMessage = "合约余额不足";
+          }
+
+          showStatus(
+            elements.withdrawStatus,
+            `提取失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
+      // 转移到所有者
+      async function transferToOwner() {
+        if (!contract) {
+          showStatus(elements.transferToOwnerStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        try {
+          showStatus(
+            elements.transferToOwnerStatus,
+            "正在转移资金到所有者...",
+            "info",
+            true
+          );
+
+          const tx = await contract.transferToOwner();
+          showStatus(
+            elements.transferToOwnerStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          showStatus(
+            elements.transferToOwnerStatus,
+            `转移成功！区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+
+          await getContractBalance();
+        } catch (error) {
+          console.error("转移失败:", error);
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.message.includes("Only the owner")) {
+            errorMessage = "只有合约所有者才能执行此操作";
+          } else if (error.message.includes("No balance")) {
+            errorMessage = "合约没有余额可转移";
+          }
+
+          showStatus(
+            elements.transferToOwnerStatus,
+            `转移失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
+      // 重置红包计数器
+      async function resetPacketCount() {
+        if (!contract) {
+          showStatus(elements.transferToOwnerStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        try {
+          showStatus(
+            elements.transferToOwnerStatus,
+            "正在重置红包计数器...",
+            "info",
+            true
+          );
+
+          const tx = await contract.resetPacketCount();
+          showStatus(
+            elements.transferToOwnerStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          showStatus(
+            elements.transferToOwnerStatus,
+            `重置成功！区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+        } catch (error) {
+          console.error("重置失败:", error);
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.message.includes("Only owner")) {
+            errorMessage = "只有合约所有者才能执行此操作";
+          }
+
+          showStatus(
+            elements.transferToOwnerStatus,
+            `重置失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
+      // 创建红包 - 修复参数传递问题
+      async function createRedPacket() {
+        if (!contract) {
+          showStatus(elements.createRedPacketStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        const amount = elements.redPacketAmountInput.val();
+        const count = parseInt(elements.redPacketCountInput.val());
+
+        try {
+          // 参数验证
+          validateRedPacketParams(amount, count);
+          
+          debugLog("创建红包参数验证", { amount, count, type: typeof count });
+
+          showStatus(
+            elements.createRedPacketStatus,
+            `正在创建红包...`,
+            "info",
+            true
+          );
+
+          // 重要：确保参数类型正确
+          const isEqual = false;           // 布尔值
+          const redPacketCount = count;    // 整数 (1-100)
+          const amountWei = parseEth(amount); // BigNumber wei格式
+
+          debugLog("发送交易参数", { 
+            isEqual, 
+            redPacketCount, 
+            amountWei: amountWei.toString(),
+            value: amountWei.toString()
+          });
+
+          // 修复：使用正确的参数顺序和类型
+          const tx = await contract.sendRedPacket(
+            isEqual,        // bool
+            redPacketCount, // uint8 (1-100)
+            amountWei,      // uint256 (wei)
+            {
+              value: amountWei,  // 发送的ETH金额 (wei格式)
+              gasLimit: 500000   // 增加Gas限制
+            }
+          );
+
+          showStatus(
+            elements.createRedPacketStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          showStatus(
+            elements.createRedPacketStatus,
+            `红包创建成功！区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+
+          elements.redPacketAmountInput.val("");
+          elements.redPacketCountInput.val("1");
+          
+          // 更新合约余额
+          await getContractBalance();
+          
+          // 自动查询最新红包
+          await autoQueryLatestPacket();
+          
+        } catch (error) {
+          console.error("创建红包失败:", error);
+          debugLog("创建红包错误详情", error);
+          
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.code === "INSUFFICIENT_FUNDS") {
+            errorMessage = "余额不足支付 Gas 费用";
+          } else if (error.message.includes("Count must be between")) {
+            errorMessage = "红包个数必须在1-100之间";
+          } else if (error.message.includes("You can send at most")) {
+            errorMessage = "您已达到红包发送上限，请联系管理员重置";
+          }
+
+          showStatus(
+            elements.createRedPacketStatus,
+            `创建红包失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
+      // 查询红包信息
+      async function queryRedPacket() {
+        if (!contract) {
+          showStatus(elements.redPacketStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        const packetId = parseInt(elements.queryPacketIdInput.val());
+        
+        if (isNaN(packetId) || packetId < 0) {
+          showStatus(elements.redPacketStatus, "请输入有效的红包ID", "error");
+          return;
+        }
+
+        try {
+          showStatus(elements.redPacketStatus, "正在查询红包信息...", "info", true);
+          
+          // 查询红包信息
+          const packetInfo = await contract.getPacketInfo(packetId);
+          const [isEqual, count, remainingCount, amount, remainingAmount, hasClaimed] = packetInfo;
+          
+          // 更新UI
+          updateRedPacketDisplay(packetId, {
+            isEqual,
+            count: count.toString(),
+            remainingCount: remainingCount.toString(),
+            amount: formatEth(amount),
+            remainingAmount: formatEth(remainingAmount),
+            hasClaimed
+          });
+          
+          currentPacketId = packetId;
+          elements.redPacketDetails.removeClass("hidden");
+          showStatus(elements.redPacketStatus, "查询成功！", "success");
+          
+        } catch (error) {
+          console.error("查询红包失败:", error);
+          let errorMessage = error.message;
+          
+          if (error.message.includes("Invalid packet ID")) {
+            errorMessage = "红包ID不存在";
+          }
+          
+          showStatus(elements.redPacketStatus, `查询失败: ${errorMessage}`, "error");
+          elements.redPacketDetails.addClass("hidden");
+        }
+      }
+
+      // 更新红包显示
+      function updateRedPacketDisplay(packetId, info) {
+        // 更新基本信息
+        $("#packetTitle").text(`红包 #${packetId}`);
+        $("#packetType").text(info.isEqual ? "等额红包" : "随机红包");
+        $("#packetTotalAmount").text(`${info.amount} ETH`);
+        $("#packetRemainingAmount").text(`${info.remainingAmount} ETH`);
+        $("#packetTotalCount").text(info.count);
+        $("#packetRemainingCount").text(info.remainingCount);
+        
+        // 更新已抢状态
+        const claimedText = info.hasClaimed ? "已抢" : "未抢";
+        const claimedClass = info.hasClaimed ? "claimed" : "not-claimed";
+        $("#packetClaimedStatus").text(claimedText).removeClass("claimed not-claimed").addClass(claimedClass);
+        
+        // 更新进度条
+        const totalCount = parseInt(info.count);
+        const remainingCount = parseInt(info.remainingCount);
+        const claimedCount = totalCount - remainingCount;
+        const progressPercent = totalCount > 0 ? (claimedCount / totalCount) * 100 : 0;
+        
+        $("#progressFill").css("width", `${progressPercent}%`);
+        $("#progressText").text(`${claimedCount} / ${totalCount}`);
+        
+        // 更新抢红包按钮状态
+        const canClaim = !info.hasClaimed && remainingCount > 0 && parseFloat(info.remainingAmount) > 0;
+        
+        if (canClaim) {
+          elements.claimRedPacketBtn.removeClass("hidden").text("🎁 抢红包").prop("disabled", false);
+        } else if (info.hasClaimed) {
+          elements.claimRedPacketBtn.addClass("hidden");
+        } else if (remainingCount === 0) {
+          elements.claimRedPacketBtn.removeClass("hidden").text("😢 红包已抢完").prop("disabled", true);
+        } else {
+          elements.claimRedPacketBtn.addClass("hidden");
+        }
+      }
+
+      // 自动查询最新红包
+      async function autoQueryLatestPacket() {
+        if (!contract) return;
+        
+        try {
+          const latestPacketId = await contract.packetId();
+          if (latestPacketId > 0) {
+            const targetId = latestPacketId - 1; // packetId是下一个要创建的ID，所以减1
+            elements.queryPacketIdInput.val(targetId);
+            await queryRedPacket();
+          }
+        } catch (error) {
+          console.log("自动查询最新红包失败:", error.message);
+        }
+      }
+
+      // 抢红包
+      async function claimRedPacket() {
+        if (!contract) {
+          showStatus(elements.redPacketStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        if (currentPacketId < 0) {
+          showStatus(elements.redPacketStatus, "请先查询红包信息", "error");
+          return;
+        }
+
+        try {
+          showStatus(elements.redPacketStatus, "正在抢红包...", "info", true);
+          
+          const tx = await contract.getRedPacket(currentPacketId, {
+            gasLimit: 300000
+          });
+          
+          showStatus(
+            elements.redPacketStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          
+          // 解析事件获取抢到的金额
+          let claimedAmount = "未知";
+          if (receipt.logs) {
+            for (const log of receipt.logs) {
+              try {
+                const parsedLog = contract.interface.parseLog(log);
+                if (parsedLog.name === "PacketClaimed") {
+                  claimedAmount = formatEth(parsedLog.args.amount);
+                  break;
+                }
+              } catch (e) {
+                // 忽略解析失败的日志
+              }
+            }
+          }
+          
+          showStatus(
+            elements.redPacketStatus,
+            `抢红包成功！获得 ${claimedAmount} ETH，区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+
+          // 刷新红包状态
+          await refreshPacketStatus();
+          
+        } catch (error) {
+          console.error("抢红包失败:", error);
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.message.includes("No remaining red packets")) {
+            errorMessage = "红包已被抢完";
+          } else if (error.message.includes("Already claimed")) {
+            errorMessage = "您已经抢过这个红包了";
+          } else if (error.message.includes("Invalid packet ID")) {
+            errorMessage = "红包ID无效";
+          }
+
+          showStatus(
+            elements.redPacketStatus,
+            `抢红包失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
+      // 刷新红包状态
+      async function refreshPacketStatus() {
+        if (currentPacketId >= 0) {
+          await queryRedPacket();
+        }
+      }
+
+      // 加载红包历史
+      async function loadRedPacketHistory() {
+        if (!contract) {
+          elements.redPacketHistory.html('<div class="error">请先连接钱包</div>');
+          return;
+        }
+
+        try {
+          elements.redPacketHistory.html('<div class="loading">正在加载红包历史...</div>');
+          
+          // 获取最新的红包ID
+          const latestPacketId = await contract.packetId();
+          
+          if (latestPacketId === 0) {
+            elements.redPacketHistory.html('<div class="no-data">暂无红包历史</div>');
+            return;
+          }
+
+          let historyHtml = '<div class="history-list">';
+          
+          // 加载最近的10个红包（或全部，如果少于10个）
+          const maxHistory = Math.min(latestPacketId, 10);
+          
+          for (let i = latestPacketId - 1; i >= Math.max(0, latestPacketId - maxHistory); i--) {
+            try {
+              const packetInfo = await contract.getPacketInfo(i);
+              const [isEqual, count, remainingCount, amount, remainingAmount, hasClaimed] = packetInfo;
+              
+              const totalCount = count.toString();
+              const claimedCount = parseInt(totalCount) - parseInt(remainingCount.toString());
+              const progressPercent = parseInt(totalCount) > 0 ? (claimedCount / parseInt(totalCount)) * 100 : 0;
+              const status = parseInt(remainingCount.toString()) === 0 ? "已抢完" : hasClaimed ? "已参与" : "可抢";
+              const statusClass = parseInt(remainingCount.toString()) === 0 ? "finished" : hasClaimed ? "claimed" : "available";
+              
+              historyHtml += `
+                <div class="history-item ${statusClass}" onclick="loadPacketDetails(${i})">
+                  <div class="history-header">
+                    <span class="packet-id">红包 #${i}</span>
+                    <span class="packet-status ${statusClass}">${status}</span>
+                  </div>
+                  <div class="history-details">
+                    <div class="detail-item">
+                      <span>类型: ${isEqual ? "等额" : "随机"}</span>
+                      <span>总额: ${formatEth(amount)} ETH</span>
+                    </div>
+                    <div class="detail-item">
+                      <span>进度: ${claimedCount}/${totalCount}</span>
+                      <span>剩余: ${formatEth(remainingAmount)} ETH</span>
+                    </div>
+                  </div>
+                  <div class="progress-bar-small">
+                    <div class="progress-fill-small" style="width: ${progressPercent}%"></div>
+                  </div>
+                </div>
+              `;
+            } catch (error) {
+              console.error(`加载红包 #${i} 失败:`, error);
+            }
+          }
+          
+          historyHtml += '</div>';
+          elements.redPacketHistory.html(historyHtml);
+          
+        } catch (error) {
+          console.error("加载红包历史失败:", error);
+          elements.redPacketHistory.html(`<div class="error">加载失败: ${error.message}</div>`);
+        }
+      }
+
+      // 加载特定红包详情
+      function loadPacketDetails(packetId) {
+        elements.queryPacketIdInput.val(packetId);
+        queryRedPacket();
+      }
+
+      // 监听账户和网络变化
+      if (window.ethereum) {
+        window.ethereum.on("accountsChanged", (accounts) => {
+          if (accounts.length === 0) {
+            disconnectWallet();
+          } else if (currentAccount && accounts[0] !== currentAccount) {
+            connectWallet();
+          }
+        });
+
+        window.ethereum.on("chainChanged", () => {
+          window.location.reload();
+        });
+      }
+
+      // 事件监听器设置
+      $(document).ready(function () {
+        // 绑定事件
+        elements.connectWallet.on("click", connectWallet);
+        elements.disconnectWallet.on("click", disconnectWallet);
+        elements.setInfoBtn.on("click", setInfo);
+        elements.getInfoBtn.on("click", getInfo);
+        elements.depositBtn.on("click", depositEth);
+        elements.withdrawBtn.on("click", withdrawEth);
+        elements.createRedPacketBtn.on("click", createRedPacket);
+        
+        // 红包相关事件
+        elements.queryRedPacketBtn.on("click", queryRedPacket);
+        elements.claimRedPacketBtn.on("click", claimRedPacket);
+        elements.refreshPacketBtn.on("click", refreshPacketStatus);
+        elements.loadHistoryBtn.on("click", loadRedPacketHistory);
+
+        // 回车键支持
+        elements.nameInput.add(elements.ageInput).on("keypress", function (e) {
+          if (e.which === 13) setInfo();
+        });
+
+        elements.depositAmount.on("keypress", function (e) {
+          if (e.which === 13) depositEth();
+        });
+
+        elements.withdrawAmount.on("keypress", function (e) {
+          if (e.which === 13) withdrawEth();
+        });
+
+        elements.redPacketAmountInput.add(elements.redPacketCountInput).on("keypress", function (e) {
+          if (e.which === 13) createRedPacket();
+        });
+
+        elements.queryPacketIdInput.on("keypress", function (e) {
+          if (e.which === 13) queryRedPacket();
+        });
+
+        // 检查是否已连接
+        if (checkMetaMask()) {
+          window.ethereum
+            .request({ method: "eth_accounts" })
+            .then((accounts) => {
+              if (accounts.length > 0) {
+                connectWallet();
+              }
+            })
+            .catch((error) => {
+              console.error("检查连接状态失败:", error);
+            });
+        }
+      });
+    </script>
+  </body>
+</html>
