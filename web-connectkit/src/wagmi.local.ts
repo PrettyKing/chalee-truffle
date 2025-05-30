@@ -23,8 +23,8 @@ const ganache = defineChain({
         default: { name: 'Ganache', url: 'http://localhost:7545' },
     },
     testnet: true, // Ganache 是一个测试网络
-    network: '1337', // Ganache 的网络 ID
 })
+
 export const config = createConfig({
     chains: [mainnet, sepolia, ganache],
     connectors: [
@@ -34,7 +34,6 @@ export const config = createConfig({
     transports: {
         [mainnet.id]: http(),
         [sepolia.id]: http(),
-        // @ts-ignore
-        [localhost.id]: http('http://localhost:7545'),
+        [ganache.id]: http('http://localhost:7545'),
     },
 })
