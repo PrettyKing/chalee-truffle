@@ -116,6 +116,7 @@
                 id="redPacketCountInput"
                 placeholder="输入红包个数"
                 min="1"
+                max="100"
                 value="1"
               />
             </div>
@@ -123,6 +124,7 @@
               创建红包
             </button>
           </div>
+          <div id="createRedPacketStatus"></div>
         </div>
         <!-- 红包状态 -->
         <div class="card glass">
@@ -286,6 +288,9 @@
             <button id="transferToOwnerBtn" class="btn btn-warning tooltip" data-tooltip="只有合约所有者可以执行此操作">
               转移所有余额到合约所有者
             </button>
+            <button id="resetPacketCountBtn" class="btn btn-info tooltip" data-tooltip="重置红包计数器（仅测试用）">
+              重置红包计数器
+            </button>
           </div>
           <div id="transferToOwnerStatus"></div>
         </div>
@@ -295,6 +300,7 @@
           if (isCurrentUserOwner) {
             elements.grid.append(ownerCardDisplay);
             $("#transferToOwnerBtn").on("click", transferToOwner);
+            $("#resetPacketCountBtn").on("click", resetPacketCount);
           } else {
             $("#ownerCard").remove();
           }
@@ -583,8 +589,54 @@
         }
       }
 
+      // 重置红包计数器
+      async function resetPacketCount() {
+        if (!contract) {
+          showStatus(elements.transferToOwnerStatus, "请先连接钱包", "error");
+          return;
+        }
+
+        try {
+          showStatus(
+            elements.transferToOwnerStatus,
+            "正在重置红包计数器...",
+            "info",
+            true
+          );
+
+          const tx = await contract.resetPacketCount();
+          showStatus(
+            elements.transferToOwnerStatus,
+            `交易已发送，交易哈希: ${tx.hash}`,
+            "info"
+          );
+
+          const receipt = await tx.wait();
+          showStatus(
+            elements.transferToOwnerStatus,
+            `重置成功！区块号: ${receipt.blockNumber}`,
+            "success"
+          );
+        } catch (error) {
+          console.error("重置失败:", error);
+          let errorMessage = error.message;
+
+          if (error.code === "ACTION_REJECTED") {
+            errorMessage = "用户拒绝了交易";
+          } else if (error.message.includes("Only owner")) {
+            errorMessage = "只有合约所有者才能执行此操作";
+          }
+
+          showStatus(
+            elements.transferToOwnerStatus,
+            `重置失败: ${errorMessage}`,
+            "error"
+          );
+        }
+      }
+
       // 红包功能
-      // 创建红包
+      // 创建红包 - 修复参数传递问题
       async function createRedPacket() {
         if (!contract) {
           showStatus(elements.createRedPacketStatus, "请先连接钱包", "error");
@@ -594,25 +646,12 @@
         const amount = elements.redPacketAmountInput.val();
         const count = parseInt(elements.redPacketCountInput.val());
 
-        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-          showStatus(
-            elements.createRedPacketStatus,
-            "请输入有效的红包金额",
-            "error"
-          );
-          return;
-        }
-
-        if (isNaN(count) || count <= 0) {
-          showStatus(
-            elements.createRedPacketStatus,
-            "请输入有效的红包个数",
-            "error"
-          );
-          return;
-        }
-
         try {
+          // 参数验证
+          validateRedPacketParams(amount, count);
+          
+          debugLog("创建红包参数验证", { amount, count, type: typeof count });
+
           showStatus(
             elements.createRedPacketStatus,
             `正在创建红包...`,
@@ -620,29 +659,28 @@
             true
           );
 
-          // const tx = await contract.sendRedPacket(
-          //   false, // isEqual
-          //   5,
-          //   parseEth(amount)
-          // );
+          // 重要：确保参数类型正确
+          const isEqual = false;           // 布尔值
+          const redPacketCount = count;    // 整数 (1-100)
+          const amountWei = parseEth(amount); // BigNumber wei格式
 
-          // 确保count是整数类型
-          const isEqual = false;
-          if (!Number.isInteger(count) || count <= 0) {
-            showStatus(
-              elements.createRedPacketStatus,
-              "红包个数必须是正整数",
-              "error"
-            );
-            return;
-          }
-          // 确保amount是有效的以太币数额
-          const amountWei = parseEth(amount);
-
-          const tx = await contract.sendRedPacket(isEqual, count, amountWei, {
-            value: amount,
-            gasLimit: 300000
+          debugLog("发送交易参数", { 
+            isEqual, 
+            redPacketCount, 
+            amountWei: amountWei.toString(),
+            value: amountWei.toString()
           });
+
+          // 修复：使用正确的参数顺序和类型
+          const tx = await contract.sendRedPacket(
+            isEqual,        // bool
+            redPacketCount, // uint8 (1-100)
+            amountWei,      // uint256 (wei)
+            {
+              value: amountWei,  // 发送的ETH金额 (wei格式)
+              gasLimit: 500000   // 增加Gas限制
+            }
+          );
 
           showStatus(
             elements.createRedPacketStatus,
@@ -659,14 +697,24 @@
 
           elements.redPacketAmountInput.val("");
           elements.redPacketCountInput.val("1");
+          
+          // 更新合约余额
+          await getContractBalance();
+          
         } catch (error) {
           console.error("创建红包失败:", error);
+          debugLog("创建红包错误详情", error);
+          
           let errorMessage = error.message;
 
           if (error.code === "ACTION_REJECTED") {
             errorMessage = "用户拒绝了交易";
           } else if (error.code === "INSUFFICIENT_FUNDS") {
             errorMessage = "余额不足支付 Gas 费用";
+          } else if (error.message.includes("Count must be between")) {
+            errorMessage = "红包个数必须在1-100之间";
+          } else if (error.message.includes("You can send at most")) {
+            errorMessage = "您已达到红包发送上限，请联系管理员重置";
           }
 
           showStatus(
@@ -714,6 +762,10 @@
 
         elements.withdrawAmount.on("keypress", function (e) {
           if (e.which === 13) withdrawEth();
+        });
+
+        elements.redPacketAmountInput.add(elements.redPacketCountInput).on("keypress", function (e) {
+          if (e.which === 13) createRedPacket();
         });
 
         // 检查是否已连接
