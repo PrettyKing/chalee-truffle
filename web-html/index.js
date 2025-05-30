@@ -1,0 +1,391 @@
+// 合约配置
+// const CONTRACT_ADDRESS = "0x742d20593E23aC4C3B604015a0B2d50C49e6665d"; // home
+const CONTRACT_ADDRESS = "0x5D8C09886C85DbD82fD2A8792D9754Ed7229e683"; // work
+
+const CONTRACT_ABI = [
+  {
+    inputs: [],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "Deposit",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "age",
+        type: "uint256",
+      },
+    ],
+    name: "Instructor",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "packetId",
+        type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "bool",
+        name: "isEqual",
+        type: "bool",
+      },
+      {
+        indexed: true,
+        internalType: "uint8",
+        name: "count",
+        type: "uint8",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "PacketCreated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "receiver",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "Withdraw",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "balance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+  {
+    inputs: [],
+    name: "currentPacketCountOfOwner",
+    outputs: [
+      {
+        internalType: "uint16",
+        name: "",
+        type: "uint16",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+  {
+    inputs: [],
+    name: "packetId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "packets",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "isEqual",
+        type: "bool",
+      },
+      {
+        internalType: "uint8",
+        name: "count",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "remainingCount",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "remainingAmount",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+  {
+    inputs: [],
+    name: "getBalance",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+  {
+    inputs: [],
+    name: "deposit",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+    payable: true,
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "withdraw",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "transferToOwner",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bool",
+        name: "isEqual",
+        type: "bool",
+      },
+      {
+        internalType: "uint8",
+        name: "count",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "sendRedPacket",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+    payable: true,
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_packetId",
+        type: "uint256",
+      },
+    ],
+    name: "getRedPacket",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "sayHi",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "pure",
+    type: "function",
+    constant: true,
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "_name",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "_age",
+        type: "uint256",
+      },
+    ],
+    name: "setInfo",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getInfo",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+    constant: true,
+  },
+];
+
+// 工具函数
+function showStatus(element, message, type = "info", showLoading = false) {
+  const loadingSpinner = showLoading
+    ? '<div class="loading-spinner"></div>'
+    : "";
+  const statusClass = `status-${type}`;
+  element.html(
+    `<div class="status-message ${statusClass}">${loadingSpinner}${message}</div>`
+  );
+}
+
+function clearStatus(element) {
+  element.html("");
+}
+
+function updateConnectionStatus(connected, account = null) {
+  const dot = elements.statusDot;
+  const text = elements.connectionText;
+
+  if (connected) {
+    dot.addClass("connected");
+    text.text("已连接");
+    // if (account) {
+    //   elements.accountInfo
+    //     .html(`<div class="account-address">当前账户: ${account}</div>`)
+    //     .removeClass("hidden");
+    // }
+  } else {
+    dot.removeClass("connected");
+    text.text("未连接");
+    elements.accountInfo.addClass("hidden");
+  }
+}
+
+function formatEth(wei) {
+  return ethers.formatEther(wei);
+}
+
+function parseEth(eth) {
+  return ethers.parseEther(eth.toString());
+}
+
+// 更新连接状态 UI
+function updateConnectionUI(connected) {
+  if (connected) {
+    elements.connectWallet.addClass("hidden");
+    elements.disconnectWallet.removeClass("hidden");
+  } else {
+    elements.connectWallet.removeClass("hidden");
+    elements.disconnectWallet.addClass("hidden");
+  }
+}
+
+// 清除所有结果
+function clearAllResults() {
+  [
+    elements.setInfoStatus,
+    elements.getInfoResult,
+    elements.ownerInfo,
+    elements.balanceDisplay,
+    elements.depositStatus,
+    elements.withdrawStatus,
+    elements.transferToOwnerStatus,
+  ].forEach(clearStatus);
+}

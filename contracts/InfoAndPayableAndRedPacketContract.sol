@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-contract InfoContractAndPayableAndRedPacket {
+contract InfoAndPayableAndRedPacketContract {
     // 测试数据 =====================
     string name;
     uint256 age;
