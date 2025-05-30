@@ -141,7 +141,7 @@
       let contract = null;
       let currentAccount = null;
 
-      console.log("Chalee DApp - Enhanced Loaded",CONTRACT_ADDRESS);
+      console.log("Chalee DApp - Enhanced Loaded", CONTRACT_ADDRESS);
 
       // DOM 元素
       const elements = {
@@ -620,8 +620,29 @@
             true
           );
 
+          // const tx = await contract.sendRedPacket(
+          //   false, // isEqual
+          //   5,
+          //   parseEth(amount)
+          // );
+
+          // 确保count是整数类型
+          const isEqual = false;
+          if (!Number.isInteger(count) || count <= 0) {
+            showStatus(
+              elements.createRedPacketStatus,
+              "红包个数必须是正整数",
+              "error"
+            );
+            return;
+          }
+          // 确保amount是有效的以太币数额
           const amountWei = parseEth(amount);
-          const tx = await contract.sendRedPacket(false, count, amountWei);
+
+          const tx = await contract.sendRedPacket(isEqual, count, amountWei, {
+            value: amount,
+            gasLimit: 300000
+          });
 
           showStatus(
             elements.createRedPacketStatus,
