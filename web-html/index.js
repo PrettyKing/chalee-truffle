@@ -63,9 +63,9 @@ const CONTRACT_ABI = [
         },
         {
           "indexed": true,
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "count",
-          "type": "uint256"
+          "type": "uint8"
         },
         {
           "indexed": true,
@@ -75,6 +75,31 @@ const CONTRACT_ABI = [
         }
       ],
       "name": "PacketCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "packetId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "claimer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "PacketClaimed",
       "type": "event"
     },
     {
@@ -168,14 +193,14 @@ const CONTRACT_ABI = [
           "type": "bool"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "count",
-          "type": "uint256"
+          "type": "uint8"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "remainingCount",
-          "type": "uint256"
+          "type": "uint8"
         },
         {
           "internalType": "uint256",
@@ -247,9 +272,9 @@ const CONTRACT_ABI = [
           "type": "bool"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "count",
-          "type": "uint256"
+          "type": "uint8"
         },
         {
           "internalType": "uint256",
@@ -277,6 +302,13 @@ const CONTRACT_ABI = [
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "resetPacketCount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -292,14 +324,14 @@ const CONTRACT_ABI = [
           "type": "bool"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "count",
-          "type": "uint256"
+          "type": "uint8"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "remainingCount",
-          "type": "uint256"
+          "type": "uint8"
         },
         {
           "internalType": "uint256",
@@ -314,6 +346,31 @@ const CONTRACT_ABI = [
         {
           "internalType": "bool",
           "name": "hasClaimed",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_packetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "hasClaimedPacket",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
           "type": "bool"
         }
       ],
@@ -438,4 +495,24 @@ function clearAllResults() {
     elements.withdrawStatus,
     elements.transferToOwnerStatus,
   ].forEach(clearStatus);
+}
+
+// 参数验证函数
+function validateRedPacketParams(amount, count) {
+  // 验证金额
+  if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+    throw new Error("请输入有效的红包金额");
+  }
+  
+  // 验证数量
+  if (!Number.isInteger(count) || count <= 0 || count > 100) {
+    throw new Error("红包个数必须是1-100之间的整数");
+  }
+  
+  return true;
+}
+
+// 调试日志函数
+function debugLog(message, data = null) {
+  console.log(`[调试] ${message}`, data);
 }
