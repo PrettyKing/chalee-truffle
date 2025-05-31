@@ -4,7 +4,7 @@ import { injected, metaMask } from 'wagmi/connectors'
 import { http } from 'viem'
 
 export const config = createConfig({
-  chains: [localhost, mainnet, sepolia],
+  chains: [localhost, mainnet, sepolia] as const,
   connectors: [
     injected(),
     metaMask(),
