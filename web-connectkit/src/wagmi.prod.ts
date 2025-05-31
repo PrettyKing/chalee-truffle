@@ -1,26 +1,42 @@
-import { createConfig, http } from 'wagmi'
+import { createConfig } from 'wagmi'
 import { getDefaultWallets } from '@rainbow-me/rainbowkit'
-import {
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    sepolia,
-} from 'wagmi/chains'
+import { mainnet, polygon, optimism, arbitrum, sepolia } from 'wagmi/chains'
+import { http } from 'viem'
 
 const { connectors } = getDefaultWallets({
-    appName: "红包DApp",
-    projectId: import.meta.env.VITE_REACT_APP_PROJECT_ID || "YOUR_PROJECT_ID",
+  appName: "红包DApp",
+  projectId: import.meta.env.VITE_REACT_APP_PROJECT_ID || "YOUR_PROJECT_ID",
+  chains: [mainnet, polygon, optimism, arbitrum, sepolia],
 })
 
 export const config = createConfig({
-    chains: [mainnet, polygon, optimism, arbitrum, sepolia],
-    connectors,
-    transports: {
-        [mainnet.id]: http(`https://eth-mainnet.alchemyapi.io/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`),
-        [polygon.id]: http(`https://polygon-mainnet.alchemyapi.io/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`),
-        [optimism.id]: http(`https://opt-mainnet.alchemyapi.io/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`),
-        [arbitrum.id]: http(`https://arb-mainnet.alchemyapi.io/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`),
-        [sepolia.id]: http(`https://eth-sepolia.alchemyapi.io/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`),
-    },
+  chains: [mainnet, polygon, optimism, arbitrum, sepolia],
+  connectors,
+  transports: {
+    [mainnet.id]: http(
+      import.meta.env.VITE_REACT_APP_ALCHEMY_ID
+        ? `https://eth-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`
+        : undefined
+    ),
+    [polygon.id]: http(
+      import.meta.env.VITE_REACT_APP_ALCHEMY_ID
+        ? `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`
+        : undefined
+    ),
+    [optimism.id]: http(
+      import.meta.env.VITE_REACT_APP_ALCHEMY_ID
+        ? `https://opt-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`
+        : undefined
+    ),
+    [arbitrum.id]: http(
+      import.meta.env.VITE_REACT_APP_ALCHEMY_ID
+        ? `https://arb-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`
+        : undefined
+    ),
+    [sepolia.id]: http(
+      import.meta.env.VITE_REACT_APP_ALCHEMY_ID
+        ? `https://eth-sepolia.g.alchemy.com/v2/${import.meta.env.VITE_REACT_APP_ALCHEMY_ID}`
+        : undefined
+    ),
+  },
 })
