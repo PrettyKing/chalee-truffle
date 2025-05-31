@@ -3,14 +3,16 @@ import { getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { mainnet, polygon, optimism, arbitrum, sepolia } from 'wagmi/chains'
 import { http } from 'viem'
 
+const chains = [mainnet, polygon, optimism, arbitrum, sepolia] as const
+
 const { connectors } = getDefaultWallets({
   appName: "红包DApp",
   projectId: import.meta.env.VITE_REACT_APP_PROJECT_ID || "YOUR_PROJECT_ID",
-  chains: [mainnet, polygon, optimism, arbitrum, sepolia],
+  chains,
 })
 
 export const config = createConfig({
-  chains: [mainnet, polygon, optimism, arbitrum, sepolia],
+  chains,
   connectors,
   transports: {
     [mainnet.id]: http(
