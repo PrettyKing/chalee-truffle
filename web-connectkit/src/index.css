@@ -362,7 +362,6 @@ body {
   --rk-radii-actionButton: 12px !important;
   --rk-radii-connectButton: 12px !important;
   --rk-radii-menuButton: 12px !important;
-  --rk-colors-accentColor: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
 
 /* 响应式设计 */
