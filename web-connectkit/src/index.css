@@ -70,26 +70,45 @@ body {
   opacity: 0.8;
 }
 
-/* 玻璃形态效果 */
+/* 玻璃形态效果 - 使用多重背景模拟毛玻璃 */
 .glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
+  background-size: 100% 100%, 20px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 16px;
   box-shadow: 
     0 8px 32px 0 rgba(31, 38, 135, 0.37),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  pointer-events: none;
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.12) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.12) 75%);
+  background-size: 100% 100%, 20px 20px;
+  border-color: rgba(255, 255, 255, 0.35);
   transform: translateY(-2px);
   box-shadow: 
     0 12px 40px 0 rgba(31, 38, 135, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.15);
 }
 
 /* 红包卡片 */
@@ -178,8 +197,12 @@ body {
   transform: none !important;
 }
 
+/* 次要按钮 - 使用渐变模拟毛玻璃效果 */
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.2);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
+  background-size: 100% 100%, 10px 10px;
   color: white;
   font-weight: 500;
   padding: 12px 24px;
@@ -187,13 +210,27 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   outline: none;
+  position: relative;
+}
+
+.btn-secondary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  pointer-events: none;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.15) 100%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.15) 75%);
+  background-size: 100% 100%, 10px 10px;
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
 }
@@ -203,19 +240,21 @@ body {
   cursor: not-allowed;
 }
 
-/* 输入框样式 */
+/* 输入框样式 - 使用渐变替代毛玻璃 */
 .input-glass {
-  background: rgba(255, 255, 255, 0.2);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.05) 75%);
+  background-size: 100% 100%, 8px 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 12px 16px;
   color: white;
   font-size: 16px;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   outline: none;
   width: 100%;
+  position: relative;
 }
 
 .input-glass::placeholder {
@@ -224,7 +263,10 @@ body {
 
 .input-glass:focus {
   border-color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.25);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.08) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.08) 75%);
+  background-size: 100% 100%, 8px 8px;
   box-shadow: 
     0 0 20px rgba(255, 255, 255, 0.1),
     0 0 0 3px rgba(255, 255, 255, 0.1);
@@ -306,10 +348,25 @@ body {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-/* 效果工具类 */
+/* 效果工具类 - 使用多重渐变模拟强模糊效果 */
 .backdrop-blur-strong {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: 
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.1) 75%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 50%, transparent 50%);
+  background-size: 100% 100%, 15px 15px, 30px 30px;
+  position: relative;
+}
+
+.backdrop-blur-strong::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
 }
 
 /* 动画关键帧 */
@@ -411,7 +468,9 @@ body {
 /* 深色主题支持 */
 @media (prefers-color-scheme: dark) {
   .glass-card {
-    background: rgba(255, 255, 255, 0.08);
+    background: 
+      linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%),
+      linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%, transparent 75%, rgba(255, 255, 255, 0.05) 75%);
     border-color: rgba(255, 255, 255, 0.15);
   }
 }
