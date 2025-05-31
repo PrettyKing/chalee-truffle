@@ -20,6 +20,7 @@ const chains = isLocal
 
 // 配置链和提供者
 const { publicClient } = configureChains(
+  // @ts-ignore
   chains,
   [
     ...(isLocal ? [

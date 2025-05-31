@@ -8,10 +8,12 @@ const chains = [mainnet, polygon, optimism, arbitrum, sepolia] as const
 const { connectors } = getDefaultWallets({
   appName: "红包DApp",
   projectId: import.meta.env.VITE_REACT_APP_PROJECT_ID || "YOUR_PROJECT_ID",
+  // @ts-ignore
   chains,
 })
 
 export const config = createConfig({
+  // @ts-ignore
   chains,
   connectors,
   transports: {
