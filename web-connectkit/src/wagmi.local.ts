@@ -1,39 +1,17 @@
 import { createConfig } from 'wagmi'
-import { mainnet, sepolia } from 'wagmi/chains'
+import { localhost, mainnet, sepolia } from 'wagmi/chains'
 import { injected, metaMask } from 'wagmi/connectors'
-import { defineChain, http } from 'viem'
-
-const ganache = defineChain({
-    id: 1337, // Ganache 默认链 ID
-    name: 'Ganache',
-    nativeCurrency: {
-        decimals: 18,
-        name: 'Ether',
-        symbol: 'ETH',
-    },
-    rpcUrls: {
-        default: {
-            http: ['http://localhost:7545'], // Ganache 默认 RPC 地址
-        },
-        public: {
-            http: ['http://localhost:7545'], // Ganache 默认 RPC 地址
-        },
-    },
-    blockExplorers: {
-        default: { name: 'Ganache', url: 'http://localhost:7545' },
-    },
-    testnet: true, // Ganache 是一个测试网络
-})
+import { http } from 'viem'
 
 export const config = createConfig({
-    chains: [mainnet, sepolia, ganache],
-    connectors: [
-        injected(),
-        metaMask(),
-    ],
-    transports: {
-        [mainnet.id]: http(),
-        [sepolia.id]: http(),
-        [ganache.id]: http('http://localhost:7545'),
-    },
+  chains: [localhost, mainnet, sepolia],
+  connectors: [
+    injected(),
+    metaMask(),
+  ],
+  transports: {
+    [localhost.id]: http('http://localhost:7545'),
+    [mainnet.id]: http(),
+    [sepolia.id]: http(),
+  },
 })
