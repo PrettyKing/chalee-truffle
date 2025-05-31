@@ -6,6 +6,7 @@ import { alchemyProvider } from "wagmi/providers/alchemy";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { localhost, mainnet, sepolia, polygon, optimism, arbitrum } from "wagmi/chains";
 import { getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { jsonRpcProvider } from "wagmi/providers/jsonRpc";
 
 import RedPacketApp from "./components/RedPacketApp";
 
@@ -21,6 +22,18 @@ const chains = isLocal
 const { publicClient } = configureChains(
   chains,
   [
+    ...(isLocal ? [
+      jsonRpcProvider({
+        rpc: (chain) => {
+          if (chain.id === localhost.id) {
+            return {
+              http: 'http://localhost:7545',
+            };
+          }
+          return null;
+        },
+      })
+    ] : []),
     ...(import.meta.env.VITE_REACT_APP_ALCHEMY_ID 
       ? [alchemyProvider({ apiKey: import.meta.env.VITE_REACT_APP_ALCHEMY_ID })]
       : []
