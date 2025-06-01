@@ -9,7 +9,7 @@
 node_modules
 */node_modules
 package-lock.json
-
+web-connectkit.bak
 # test
 **/test/coverage
 test

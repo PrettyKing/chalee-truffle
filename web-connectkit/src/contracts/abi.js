@@ -10,7 +10,7 @@ export const RED_PACKET_ABI = [
       {
         "indexed": true,
         "internalType": "address",
-        "name": "sender",
+        "name": "creator",
         "type": "address"
       },
       {
@@ -18,59 +18,21 @@ export const RED_PACKET_ABI = [
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
-      }
-    ],
-    "name": "Deposit",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "age",
-        "type": "uint256"
-      }
-    ],
-    "name": "Instructor",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "packetId",
+        "name": "count",
         "type": "uint256"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "bool",
         "name": "isEqual",
         "type": "bool"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint8",
-        "name": "count",
-        "type": "uint8"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
       }
     ],
-    "name": "PacketCreated",
+    "name": "RedPacketCreated",
     "type": "event"
   },
   {
@@ -78,14 +40,8 @@ export const RED_PACKET_ABI = [
     "inputs": [
       {
         "indexed": true,
-        "internalType": "uint256",
-        "name": "packetId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
         "internalType": "address",
-        "name": "claimer",
+        "name": "grabber",
         "type": "address"
       },
       {
@@ -95,128 +51,26 @@ export const RED_PACKET_ABI = [
         "type": "uint256"
       }
     ],
-    "name": "PacketClaimed",
+    "name": "RedPacketGrabbed",
     "type": "event"
   },
   {
-    "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "receiver",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "c",
+        "type": "uint256"
       },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "Withdraw",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "balance",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [],
-    "name": "currentPacketCountOfOwner",
-    "outputs": [
-      {
-        "internalType": "uint16",
-        "name": "",
-        "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [],
-    "name": "packetId",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "packets",
-    "outputs": [
       {
         "internalType": "bool",
-        "name": "isEqual",
+        "name": "_isEqual",
         "type": "bool"
-      },
-      {
-        "internalType": "uint8",
-        "name": "count",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint8",
-        "name": "remainingCount",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "remainingAmount",
-        "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
+    "name": "createRedPacket",
+    "outputs": [],
     "stateMutability": "payable",
-    "type": "receive",
-    "payable": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -229,140 +83,57 @@ export const RED_PACKET_ABI = [
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [],
-    "name": "deposit",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function",
-    "payable": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "withdraw",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "transferToOwner",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bool",
-        "name": "isEqual",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint8",
-        "name": "count",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "sendRedPacket",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function",
-    "payable": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packetId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getRedPacket",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "resetPacketCount",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packetId",
-        "type": "uint256"
-      }
-    ],
-    "name": "getPacketInfo",
+    "name": "getRedPacketInfo",
     "outputs": [
       {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "remaining",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "remainingCount",
+        "type": "uint256"
+      },
+      {
         "internalType": "bool",
-        "name": "isEqual",
+        "name": "equalDistribution",
         "type": "bool"
       },
       {
-        "internalType": "uint8",
-        "name": "count",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint8",
-        "name": "remainingCount",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "remainingAmount",
-        "type": "uint256"
-      },
-      {
         "internalType": "bool",
-        "name": "hasClaimed",
+        "name": "initialized",
         "type": "bool"
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "grabRedPacket",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_packetId",
-        "type": "uint256"
-      },
       {
         "internalType": "address",
         "name": "user",
         "type": "address"
       }
     ],
-    "name": "hasClaimedPacket",
+    "name": "hasGrabbed",
     "outputs": [
       {
         "internalType": "bool",
@@ -371,61 +142,9 @@ export const RED_PACKET_ABI = [
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [],
-    "name": "sayHi",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_name",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_age",
-        "type": "uint256"
-      }
-    ],
-    "name": "setInfo",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getInfo",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
   }
-]
+];
 
 // 请在部署合约后更新此地址
-export const CONTRACT_ADDRESS = import.meta.env.VITE_REACT_APP_CONTRACT_ADDRESS;
+export const CONTRACT_ADDRESS = process.env.REACT_APP_CONTRACT_ADDRESS;
