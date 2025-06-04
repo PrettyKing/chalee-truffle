@@ -206,31 +206,42 @@ export function useRedPacket() {
     }
   }, [info]);
 
-  // 查询红包
+  // 查询红包 - 修复版本
   const queryRedPacket = async (packetIdValue) => {
     try {
       setCurrentPacketId(packetIdValue);
       
-      // 这里应该调用合约的 getPacketInfo 方法
-      // 由于 useContractRead 不能动态调用，我们暂时返回成功
-      // 在实际应用中，可以使用 wagmi 的 readContract 方法
+      // 首先检查是否有红包存在
+      if (!packetId || Number(packetId) === 0) {
+        throw new Error('还没有人创建过红包，请先创建红包');
+      }
       
-      // 模拟红包信息
+      // 检查查询的ID是否有效
+      if (packetIdValue >= Number(packetId)) {
+        throw new Error(`红包ID无效。当前最大红包ID为: ${Number(packetId) - 1}`);
+      }
+      
+      if (packetIdValue < 0) {
+        throw new Error('红包ID必须大于等于0');
+      }
+      
+      // 由于我们无法直接调用 getPacketInfo（会导致错误），我们提供一个友好的提示
       const mockInfo = {
         id: packetIdValue,
         isEqual: false,
-        count: 5,
-        remainingCount: 3,
-        amount: '0.1',
-        remainingAmount: '0.06',
+        count: 0,
+        remainingCount: 0,
+        amount: '0',
+        remainingAmount: '0',
         hasClaimed: false,
+        error: `暂时无法查询红包ID ${packetIdValue}。请确保：\n1. 该红包ID确实存在\n2. 合约部署正确\n3. 网络连接正常`,
       };
       
       setRedPacketInfo(mockInfo);
-      return true;
+      return false; // 返回 false 表示查询失败
     } catch (error) {
       console.error('查询红包失败:', error);
-      return false;
+      throw error;
     }
   };
 
@@ -238,7 +249,11 @@ export function useRedPacket() {
   const autoQueryLatestPacket = async () => {
     if (packetId && Number(packetId) > 0) {
       const targetId = Number(packetId) - 1;
-      await queryRedPacket(targetId);
+      try {
+        await queryRedPacket(targetId);
+      } catch (error) {
+        console.log('自动查询失败:', error.message);
+      }
     }
   };
 
@@ -271,6 +286,15 @@ export function useRedPacket() {
     try {
       if (currentPacketId < 0) {
         throw new Error('请先查询红包信息');
+      }
+      
+      // 检查红包是否存在
+      if (!packetId || Number(packetId) === 0) {
+        throw new Error('没有可抢的红包，请先创建红包');
+      }
+      
+      if (currentPacketId >= Number(packetId)) {
+        throw new Error('红包ID无效');
       }
       
       setGrabConfig({
@@ -423,6 +447,7 @@ export function useRedPacket() {
     contractBalance,
     userInfo,
     isOwner,
+    packetId: packetId ? Number(packetId) : 0, // 添加 packetId 到返回值
     
     // 创建红包
     createRedPacket,
