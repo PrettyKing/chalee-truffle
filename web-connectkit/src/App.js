@@ -11,13 +11,32 @@ import {
   arbitrum,
   goerli,
   sepolia,
-  localhost,
 } from 'wagmi/chains';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import RedPacketApp from './components/RedPacketApp';
+
+// 自定义 localhost 配置，使用端口 7545
+const localhost = {
+  id: 1337,
+  name: 'Localhost',
+  network: 'localhost',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Ether',
+    symbol: 'ETH',
+  },
+  rpcUrls: {
+    default: {
+      http: ['http://127.0.0.1:7545'],
+    },
+    public: {
+      http: ['http://127.0.0.1:7545'],
+    },
+  },
+};
 
 const { chains, publicClient } = configureChains(
   [
