@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useContractRead } from 'wagmi';
+import { useContractRead } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contracts/ChaleeDApp';
-import { formatEth } from '../utils/helpers';
 
 export default function PacketHistory() {
-  const { address } = useAccount();
   const [historyData, setHistoryData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
