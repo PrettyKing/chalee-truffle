@@ -19,6 +19,7 @@ export default function RedPacketApp() {
     contractBalance,
     userInfo,
     isOwner,
+    packetId,
     
     // 红包功能
     createRedPacket,
@@ -90,6 +91,9 @@ export default function RedPacketApp() {
                 <div className="border-l border-white border-opacity-30 pl-4">
                   <span>合约余额: {contractBalance} ETH</span>
                 </div>
+                <div className="border-l border-white border-opacity-30 pl-4">
+                  <span>红包总数: {packetId}</span>
+                </div>
                 {isOwner && (
                   <div className="border-l border-white border-opacity-30 pl-4">
                     <span className="bg-yellow-500 text-black px-2 py-1 rounded text-sm font-bold">
@@ -141,6 +145,7 @@ export default function RedPacketApp() {
                     onQueryRedPacket={queryRedPacket}
                     isLoading={isGrabbing}
                     error={grabError}
+                    packetId={packetId}
                   />
                 </div>
               )}
