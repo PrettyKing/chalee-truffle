@@ -6,7 +6,8 @@ export function formatEth(wei) {
     if (typeof wei === 'bigint') {
       return formatEther(wei);
     }
-    return formatEther(wei.toString());
+    // 确保转换为 bigint
+    return formatEther(BigInt(wei.toString()));
   } catch (error) {
     console.error('格式化ETH失败:', error);
     return '0';
@@ -77,6 +78,10 @@ export function getErrorMessage(error) {
     return '用户拒绝了交易';
   } else if (error?.cause?.code === 'INSUFFICIENT_FUNDS') {
     return '余额不足支付 Gas 费用';
+  } else if (error?.message?.includes('User rejected')) {
+    return '用户拒绝了交易';
+  } else if (error?.message?.includes('insufficient funds')) {
+    return '余额不足支付交易费用';
   } else if (error?.message?.includes('Count must be between')) {
     return '红包个数必须在1-100之间';
   } else if (error?.message?.includes('You can send at most')) {
