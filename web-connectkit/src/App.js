@@ -1,9 +1,9 @@
 import '@rainbow-me/rainbowkit/styles.css';
 import {
-  getDefaultConfig,
+  getDefaultWallets,
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
-import { WagmiProvider } from 'wagmi';
+import { configureChains, createConfig, WagmiConfig } from 'wagmi';
 import {
   mainnet,
   polygon,
@@ -13,14 +13,14 @@ import {
   sepolia,
   localhost,
 } from 'wagmi/chains';
+import { alchemyProvider } from 'wagmi/providers/alchemy';
+import { publicProvider } from 'wagmi/providers/public';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import RedPacketApp from './components/RedPacketApp';
 
-const config = getDefaultConfig({
-  appName: 'Chalee DApp - 红包应用',
-  projectId: process.env.REACT_APP_PROJECT_ID || 'YOUR_PROJECT_ID',
-  chains: [
+const { chains, publicClient } = configureChains(
+  [
     mainnet, 
     polygon, 
     optimism, 
@@ -29,20 +29,35 @@ const config = getDefaultConfig({
     sepolia,
     localhost,
   ],
-  ssr: false, // If your dApp uses server side rendering (SSR)
+  [
+    alchemyProvider({ apiKey: process.env.REACT_APP_ALCHEMY_ID }),
+    publicProvider()
+  ]
+);
+
+const { connectors } = getDefaultWallets({
+  appName: 'Chalee DApp - 红包应用',
+  projectId: process.env.REACT_APP_PROJECT_ID || 'YOUR_PROJECT_ID',
+  chains
+});
+
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors,
+  publicClient
 });
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <WagmiProvider config={config}>
+    <WagmiConfig config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
+        <RainbowKitProvider chains={chains}>
           <RedPacketApp />
         </RainbowKitProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </WagmiConfig>
   );
 }
 
