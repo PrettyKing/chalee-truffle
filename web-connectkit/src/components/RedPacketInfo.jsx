@@ -1,24 +1,35 @@
 import { useState } from 'react';
 import { getErrorMessage } from '../utils/helpers';
 
-export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket, isLoading, error }) {
-  const [packetId, setPacketId] = useState('0');
+export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket, isLoading, error, packetId }) {
+  const [inputPacketId, setInputPacketId] = useState('0');
   const [localError, setLocalError] = useState('');
 
   const handleQuery = async (e) => {
     e.preventDefault();
     setLocalError('');
 
-    const id = parseInt(packetId);
+    const id = parseInt(inputPacketId);
     if (isNaN(id) || id < 0) {
-      setLocalError('请输入有效的红包ID');
+      setLocalError('请输入有效的红包ID（大于等于0）');
+      return;
+    }
+
+    // 检查红包ID是否在有效范围内
+    if (packetId === 0) {
+      setLocalError('还没有人创建过红包，请先创建红包');
+      return;
+    }
+
+    if (id >= packetId) {
+      setLocalError(`红包ID无效。当前最大红包ID为: ${packetId - 1}`);
       return;
     }
 
     try {
       const success = await onQueryRedPacket(id);
       if (!success) {
-        setLocalError('红包不存在或查询失败');
+        setLocalError('查询失败，请检查红包ID是否正确');
       }
     } catch (err) {
       setLocalError(getErrorMessage(err));
@@ -52,6 +63,22 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
         <p className="text-white opacity-80">查询和领取红包</p>
       </div>
 
+      {/* 红包状态提示 */}
+      {packetId !== undefined && (
+        <div className="bg-white bg-opacity-10 rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between text-white text-sm">
+            <span>当前红包总数:</span>
+            <span className="font-bold">{packetId} 个</span>
+          </div>
+          <div className="flex items-center justify-between text-white text-sm mt-1">
+            <span>可查询ID范围:</span>
+            <span className="font-bold">
+              {packetId > 0 ? `0 - ${packetId - 1}` : '暂无红包'}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* 查询红包 */}
       <form onSubmit={handleQuery} className="space-y-4 mb-6">
         <div>
@@ -62,23 +89,31 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
             <input
               type="number"
               min="0"
-              value={packetId}
-              onChange={(e) => setPacketId(e.target.value)}
-              placeholder="输入红包ID"
+              max={packetId > 0 ? packetId - 1 : 0}
+              value={inputPacketId}
+              onChange={(e) => setInputPacketId(e.target.value)}
+              placeholder={packetId > 0 ? `输入 0-${packetId - 1}` : '暂无红包'}
               className="flex-1 px-4 py-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent"
+              disabled={packetId === 0}
             />
             <button
               type="submit"
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition-colors"
+              disabled={packetId === 0}
+              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
             >
               查询
             </button>
           </div>
+          {packetId === 0 && (
+            <p className="text-yellow-300 text-xs mt-1">
+              💡 还没有红包被创建，请先在左侧创建红包
+            </p>
+          )}
         </div>
       </form>
 
       {/* 红包详情 */}
-      {info ? (
+      {info && !info.error ? (
         <div className="space-y-6">
           {/* 红包头部信息 */}
           <div className="bg-white bg-opacity-10 rounded-2xl p-6">
@@ -186,15 +221,35 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
             </button>
           </div>
         </div>
+      ) : info && info.error ? (
+        /* 错误状态显示 */
+        <div className="text-center py-8">
+          <div className="text-6xl mb-4 opacity-50">❌</div>
+          <h3 className="text-white text-xl font-bold mb-4">查询失败</h3>
+          <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-4 mb-4">
+            <div className="text-red-200 text-sm whitespace-pre-line">
+              {info.error}
+            </div>
+          </div>
+          <p className="text-white opacity-70 text-sm">
+            请检查网络连接和合约配置
+          </p>
+        </div>
       ) : (
         /* 空状态 */
         <div className="text-center py-12">
           <div className="text-6xl mb-4 opacity-50">🎁</div>
           <p className="text-white opacity-70 mb-4">
-            输入红包ID来查询红包信息
+            {packetId === 0 
+              ? '还没有红包被创建，请先创建红包' 
+              : '输入红包ID来查询红包信息'
+            }
           </p>
           <p className="text-white opacity-50 text-sm">
-            提示：红包ID从0开始递增
+            {packetId > 0 
+              ? `当前可查询的红包ID: 0 - ${packetId - 1}`
+              : '创建第一个红包后就可以查询了'
+            }
           </p>
         </div>
       )}
