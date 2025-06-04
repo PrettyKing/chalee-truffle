@@ -18,12 +18,11 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "GENERATE_SOURCEMAP=false react-scripts start",
-    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "start:clean": "npm start 2>/dev/null",
-    "dev": "npm run start:clean"
+    "dev": "react-scripts start"
   },
   "eslintConfig": {
     "extends": [
