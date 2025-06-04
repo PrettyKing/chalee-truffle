@@ -6,7 +6,7 @@ export function formatEth(wei) {
     if (typeof wei === 'bigint') {
       return formatEther(wei);
     }
-    return formatEther(BigInt(wei.toString()));
+    return formatEther(wei.toString());
   } catch (error) {
     console.error('格式化ETH失败:', error);
     return '0';
