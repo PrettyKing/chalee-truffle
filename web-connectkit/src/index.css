@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import enhanced red packet styles */
+@import './styles/red-packet-enhanced.css';
+
 /* 全局样式 */
 * {
   box-sizing: border-box;
@@ -208,4 +211,76 @@ button:disabled {
 /* 信息状态样式 */
 .status-info {
   @apply bg-blue-500 bg-opacity-20 border border-blue-500 border-opacity-50 text-blue-200;
+}
+
+/* Enhanced status message styles */
+.status-message {
+  @apply p-3 rounded-lg mt-2 flex items-center text-sm;
+}
+
+.status-message.status-success {
+  @apply bg-green-100 border border-green-300 text-green-700;
+}
+
+.status-message.status-error {
+  @apply bg-red-100 border border-red-300 text-red-700;
+}
+
+.status-message.status-warning {
+  @apply bg-yellow-100 border border-yellow-300 text-yellow-700;
+}
+
+.status-message.status-info {
+  @apply bg-blue-100 border border-blue-300 text-blue-700;
+}
+
+/* Connection status enhancement */
+.connection-indicator {
+  @apply flex items-center space-x-2 p-3 rounded-lg;
+}
+
+.connection-indicator.connected {
+  @apply bg-green-100 border border-green-300;
+}
+
+.connection-indicator.disconnected {
+  @apply bg-red-100 border border-red-300;
+}
+
+/* Enhanced card styles with improved glass effect */
+.enhanced-card {
+  @apply bg-white bg-opacity-10 backdrop-blur-lg border border-white border-opacity-20 rounded-2xl p-6 shadow-xl;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.enhanced-card:hover {
+  @apply bg-opacity-20 transform translate-y-[-2px] shadow-2xl;
+  transition: all 0.3s ease;
+}
+
+/* Improved button styles */
+.btn-enhanced {
+  @apply px-6 py-3 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50;
+}
+
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 text-white;
+}
+
+.btn-success {
+  @apply bg-green-600 hover:bg-green-700 text-white;
+}
+
+.btn-warning {
+  @apply bg-yellow-600 hover:bg-yellow-700 text-white;
+}
+
+.btn-danger {
+  @apply bg-red-600 hover:bg-red-700 text-white;
+}
+
+/* Input field enhancements */
+.input-enhanced {
+  @apply w-full px-4 py-3 rounded-xl bg-white bg-opacity-20 border border-white border-opacity-30 text-white placeholder-white placeholder-opacity-70 focus:bg-opacity-30 focus:border-opacity-50;
 }
