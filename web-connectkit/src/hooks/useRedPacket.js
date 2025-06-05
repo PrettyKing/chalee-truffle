@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contracts/ChaleeDApp';
-import { parseEth, formatEth, getErrorMessage, validateRedPacketParams } from '../utils/helpers';
+import { parseEth, formatEth, getErrorMessage, validateRedPacketParams, debugLog } from '../utils/helpers';
 
 export function useRedPacket() {
   const { address, isConnected } = useAccount();
@@ -10,6 +10,7 @@ export function useRedPacket() {
   const [contractBalance, setContractBalance] = useState('0');
   const [userInfo, setUserInfo] = useState({ name: '', age: 0 });
   const [isOwner, setIsOwner] = useState(false);
+  const [queryError, setQueryError] = useState('');
 
   // 获取合约所有者
   const { data: owner } = useContractRead({
@@ -31,14 +32,6 @@ export function useRedPacket() {
     abi: CONTRACT_ABI,
     functionName: 'packetId',
   });
-  // 获取红包信息
-  const { data: packetInfo, refetch: refetchPacketInfo } = useContractRead({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
-    functionName: 'getPacketInfo',
-    args: [currentPacketId],
-    enabled: isConnected && currentPacketId >= 0,
-  });
 
   // 获取用户信息
   const { data: info, refetch: refetchUserInfo } = useContractRead({
@@ -48,7 +41,7 @@ export function useRedPacket() {
     enabled: isConnected,
   });
 
-  // 创建红包
+  // 创建红包配置
   const [createConfig, setCreateConfig] = useState(null);
   const { config: createRedPacketConfig } = usePrepareContractWrite({
     address: CONTRACT_ADDRESS,
@@ -73,7 +66,7 @@ export function useRedPacket() {
     hash: createData?.hash,
   });
 
-  // 抢红包
+  // 抢红包配置
   const [grabConfig, setGrabConfig] = useState(null);
   const { config: grabRedPacketConfig } = usePrepareContractWrite({
     address: CONTRACT_ADDRESS,
@@ -97,7 +90,7 @@ export function useRedPacket() {
     hash: grabData?.hash,
   });
 
-  // 存款
+  // 存款配置
   const [depositConfig, setDepositConfig] = useState(null);
   const { config: depositContractConfig } = usePrepareContractWrite({
     address: CONTRACT_ADDRESS,
@@ -121,7 +114,7 @@ export function useRedPacket() {
     hash: depositData?.hash,
   });
 
-  // 提款
+  // 提款配置
   const [withdrawConfig, setWithdrawConfig] = useState(null);
   const { config: withdrawContractConfig } = usePrepareContractWrite({
     address: CONTRACT_ADDRESS,
@@ -145,7 +138,7 @@ export function useRedPacket() {
     hash: withdrawData?.hash,
   });
 
-  // 设置用户信息
+  // 设置用户信息配置
   const [setInfoConfig, setSetInfoConfig] = useState(null);
   const { config: setInfoContractConfig } = usePrepareContractWrite({
     address: CONTRACT_ADDRESS,
@@ -169,7 +162,7 @@ export function useRedPacket() {
     hash: setInfoData?.hash,
   });
 
-  // 转移到所有者
+  // 转移到所有者配置
   const [transferConfig, setTransferConfig] = useState(null);
   const { config: transferContractConfig } = usePrepareContractWrite({
     address: CONTRACT_ADDRESS,
@@ -192,7 +185,28 @@ export function useRedPacket() {
     hash: transferData?.hash,
   });
 
-  // 更新状态
+  // 查询红包信息的 hook - 使用动态参数
+  const [packetQueryId, setPacketQueryId] = useState(-1);
+  const { 
+    data: packetInfoData, 
+    isLoading: isQueryingPacket,
+    error: packetQueryError,
+    refetch: refetchPacketInfo 
+  } = useContractRead({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'getPacketInfo',
+    args: [packetQueryId],
+    enabled: isConnected && packetQueryId >= 0,
+    onError: (error) => {
+      debugLog('查询红包信息失败', { packetQueryId, error: error.message });
+    },
+    onSuccess: (data) => {
+      debugLog('查询红包信息成功', { packetQueryId, data });
+    }
+  });
+
+  // 更新状态 effects
   useEffect(() => {
     if (balance) {
       setContractBalance(formatEth(balance));
@@ -214,12 +228,61 @@ export function useRedPacket() {
     }
   }, [info]);
 
-  // 查询红包 - 修复版本
-  const queryRedPacket = async (packetIdValue) => {
+  // 处理红包查询结果
+  useEffect(() => {
+    if (packetInfoData && packetQueryId >= 0) {
+      try {
+        const [isEqual, count, remainingCount, amount, remainingAmount, hasClaimed] = packetInfoData;
+        
+        const processedInfo = {
+          id: packetQueryId,
+          isEqual: Boolean(isEqual),
+          count: Number(count),
+          remainingCount: Number(remainingCount),
+          amount: formatEth(amount),
+          remainingAmount: formatEth(remainingAmount),
+          hasClaimed: Boolean(hasClaimed),
+          error: null
+        };
+        
+        debugLog('红包信息解析完成', processedInfo);
+        setRedPacketInfo(processedInfo);
+        setQueryError('');
+      } catch (error) {
+        debugLog('红包信息解析失败', error);
+        setQueryError('解析红包信息失败: ' + error.message);
+        setRedPacketInfo({
+          id: packetQueryId,
+          error: '解析红包信息失败: ' + error.message
+        });
+      }
+    }
+  }, [packetInfoData, packetQueryId]);
+
+  // 处理查询错误
+  useEffect(() => {
+    if (packetQueryError && packetQueryId >= 0) {
+      const errorMsg = getErrorMessage(packetQueryError);
+      debugLog('红包查询错误', { packetQueryId, error: errorMsg });
+      setQueryError(errorMsg);
+      setRedPacketInfo({
+        id: packetQueryId,
+        error: errorMsg
+      });
+    }
+  }, [packetQueryError, packetQueryId]);
+
+  // 查询红包函数 - 修复版本
+  const queryRedPacket = useCallback(async (packetIdValue) => {
     try {
-      setCurrentPacketId(packetIdValue);
+      debugLog('开始查询红包', { packetIdValue, currentPacketId: Number(packetId) });
       
-      // 首先检查是否有红包存在
+      // 输入验证
+      if (packetIdValue < 0 || !Number.isInteger(packetIdValue)) {
+        throw new Error('红包ID必须是大于等于0的整数');
+      }
+
+      // 检查是否有红包存在
       if (!packetId || Number(packetId) === 0) {
         throw new Error('还没有人创建过红包，请先创建红包');
       }
@@ -229,35 +292,40 @@ export function useRedPacket() {
         throw new Error(`红包ID无效。当前最大红包ID为: ${Number(packetId) - 1}`);
       }
       
-      if (packetIdValue < 0) {
-        throw new Error('红包ID必须大于等于0');
-      }
+      // 重置错误状态
+      setQueryError('');
+      setRedPacketInfo(null);
       
-      // 查询红包信息
-      const result = await refetchPacketInfo({ args: [packetIdValue] });
-      if (result.error) {
-        throw new Error(`查询红包失败: ${result.error.message}`);
-      }
+      // 设置要查询的ID，这会触发 useContractRead
+      setCurrentPacketId(packetIdValue);
+      setPacketQueryId(packetIdValue);
       
-      setRedPacketInfo(mockInfo);
-      return false; // 返回 false 表示查询失败
+      // 返回成功
+      return true;
+      
     } catch (error) {
-      console.error('查询红包失败:', error);
+      debugLog('查询红包失败', error);
+      setQueryError(error.message);
+      setRedPacketInfo({
+        id: packetIdValue,
+        error: error.message
+      });
       throw error;
     }
-  };
+  }, [packetId]);
 
   // 自动查询最新红包
-  const autoQueryLatestPacket = async () => {
+  const autoQueryLatestPacket = useCallback(async () => {
     if (packetId && Number(packetId) > 0) {
       const targetId = Number(packetId) - 1;
+      debugLog('自动查询最新红包', { targetId, totalPackets: Number(packetId) });
       try {
         await queryRedPacket(targetId);
       } catch (error) {
-        console.log('自动查询失败:', error.message);
+        debugLog('自动查询失败', error.message);
       }
     }
-  };
+  }, [packetId, queryRedPacket]);
 
   // 创建红包函数
   const createRedPacket = async ({ amount, count, isEqual = false }) => {
@@ -265,6 +333,7 @@ export function useRedPacket() {
       validateRedPacketParams(amount, count);
       
       const amountWei = parseEth(amount);
+      debugLog('创建红包参数', { amount, count, isEqual, amountWei: amountWei.toString() });
       
       setCreateConfig({
         args: [isEqual, count, amountWei],
@@ -298,6 +367,8 @@ export function useRedPacket() {
       if (currentPacketId >= Number(packetId)) {
         throw new Error('红包ID无效');
       }
+
+      debugLog('抢红包', { currentPacketId });
       
       setGrabConfig({
         args: [currentPacketId],
@@ -322,6 +393,7 @@ export function useRedPacket() {
       }
       
       const amountWei = parseEth(amount);
+      debugLog('存款', { amount, amountWei: amountWei.toString() });
       
       setDepositConfig({
         value: amountWei,
@@ -346,6 +418,7 @@ export function useRedPacket() {
       }
       
       const amountWei = parseEth(amount);
+      debugLog('提款', { amount, amountWei: amountWei.toString() });
       
       setWithdrawConfig({
         args: [amountWei],
@@ -369,6 +442,8 @@ export function useRedPacket() {
         throw new Error('请输入有效的姓名和年龄');
       }
       
+      debugLog('设置用户信息', { name, age });
+      
       setSetInfoConfig({
         args: [name, age],
       });
@@ -387,6 +462,7 @@ export function useRedPacket() {
   // 转移到所有者函数
   const transferToOwner = async () => {
     try {
+      debugLog('转移到所有者');
       setTransferConfig({ enabled: true });
       
       setTimeout(() => {
@@ -401,46 +477,58 @@ export function useRedPacket() {
   };
 
   // 刷新数据
-  const refreshData = () => {
+  const refreshData = useCallback(() => {
+    debugLog('刷新数据');
     refetchBalance();
     refetchPacketId();
     refetchUserInfo();
-  };
+    if (packetQueryId >= 0) {
+      refetchPacketInfo();
+    }
+  }, [refetchBalance, refetchPacketId, refetchUserInfo, refetchPacketInfo, packetQueryId]);
 
   // 监听交易成功
   useEffect(() => {
     if (isCreateSuccess) {
+      debugLog('红包创建成功');
       refreshData();
-      autoQueryLatestPacket();
+      setTimeout(() => {
+        autoQueryLatestPacket();
+      }, 2000); // 等待2秒让区块确认
       setCreateConfig(null);
     }
-  }, [isCreateSuccess]);
+  }, [isCreateSuccess, refreshData, autoQueryLatestPacket]);
 
   useEffect(() => {
     if (isGrabSuccess) {
+      debugLog('抢红包成功');
       refreshData();
       if (currentPacketId >= 0) {
-        queryRedPacket(currentPacketId);
+        setTimeout(() => {
+          queryRedPacket(currentPacketId);
+        }, 2000); // 等待2秒让区块确认
       }
       setGrabConfig(null);
     }
-  }, [isGrabSuccess]);
+  }, [isGrabSuccess, currentPacketId, queryRedPacket, refreshData]);
 
   useEffect(() => {
     if (isDepositSuccess || isWithdrawSuccess || isTransferSuccess) {
+      debugLog('余额操作成功', { isDepositSuccess, isWithdrawSuccess, isTransferSuccess });
       refreshData();
       setDepositConfig(null);
       setWithdrawConfig(null);
       setTransferConfig(null);
     }
-  }, [isDepositSuccess, isWithdrawSuccess, isTransferSuccess]);
+  }, [isDepositSuccess, isWithdrawSuccess, isTransferSuccess, refreshData]);
 
   useEffect(() => {
     if (isSetInfoSuccess) {
+      debugLog('用户信息设置成功');
       refetchUserInfo();
       setSetInfoConfig(null);
     }
-  }, [isSetInfoSuccess]);
+  }, [isSetInfoSuccess, refetchUserInfo]);
 
   return {
     // 状态
@@ -449,7 +537,8 @@ export function useRedPacket() {
     contractBalance,
     userInfo,
     isOwner,
-    packetId: packetId ? Number(packetId) : 0, // 添加 packetId 到返回值
+    packetId: packetId ? Number(packetId) : 0,
+    queryError,
     
     // 创建红包
     createRedPacket,
@@ -483,5 +572,6 @@ export function useRedPacket() {
     queryRedPacket,
     autoQueryLatestPacket,
     refreshData,
+    isQueryingPacket,
   };
 }
