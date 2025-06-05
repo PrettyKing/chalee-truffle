@@ -3,7 +3,7 @@ import {
   ConnectKitProvider,
   getDefaultConfig,
 } from 'connectkit';
-import { WagmiProvider, createConfig, http } from 'wagmi';
+import { configureChains, createConfig, WagmiConfig } from 'wagmi';
 import {
   mainnet,
   polygon,
@@ -12,6 +12,8 @@ import {
   goerli,
   sepolia,
 } from 'wagmi/chains';
+import { alchemyProvider } from 'wagmi/providers/alchemy';
+import { publicProvider } from 'wagmi/providers/public';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import RedPacketApp from './components/RedPacketApp';
@@ -36,6 +38,23 @@ const localhost = {
   },
 };
 
+// 配置链和 providers (wagmi v1 风格)
+const { chains, publicClient } = configureChains(
+  [
+    mainnet, 
+    polygon, 
+    optimism, 
+    arbitrum, 
+    goerli, 
+    sepolia,
+    localhost,
+  ],
+  [
+    alchemyProvider({ apiKey: process.env.REACT_APP_ALCHEMY_ID }),
+    publicProvider()
+  ]
+);
+
 const config = createConfig(
   getDefaultConfig({
     // 您的 dApp 信息
@@ -47,27 +66,11 @@ const config = createConfig(
     // WalletConnect 项目ID
     walletConnectProjectId: process.env.REACT_APP_PROJECT_ID || 'YOUR_PROJECT_ID',
     
-    // 链配置
-    chains: [
-      mainnet, 
-      polygon, 
-      optimism, 
-      arbitrum, 
-      goerli, 
-      sepolia,
-      localhost,
-    ],
+    // 传递配置好的链
+    chains,
     
-    // Transports 配置 (替代 providers)
-    transports: {
-      [mainnet.id]: http(),
-      [polygon.id]: http(),
-      [optimism.id]: http(),
-      [arbitrum.id]: http(),
-      [goerli.id]: http(),
-      [sepolia.id]: http(),
-      [localhost.id]: http(),
-    },
+    // 其他选项
+    autoConnect: true,
   })
 );
 
@@ -75,7 +78,7 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <WagmiProvider config={config}>
+    <WagmiConfig config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider
           theme="auto"
@@ -95,7 +98,7 @@ function App() {
           <RedPacketApp />
         </ConnectKitProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </WagmiConfig>
   );
 }
 
