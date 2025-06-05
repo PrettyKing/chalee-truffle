@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getErrorMessage } from '../utils/helpers';
+import { getErrorMessage, calculateProgress, formatPacketStatus } from '../utils/helpers';
 
 export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket, isLoading, error, packetId }) {
   const [inputPacketId, setInputPacketId] = useState('0');
@@ -52,15 +52,26 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
   const alreadyClaimed = info && info.hasClaimed;
 
   const progressPercent = info 
-    ? ((info.count - info.remainingCount) / info.count) * 100 
+    ? calculateProgress(info.count - info.remainingCount, info.count)
     : 0;
 
+  const claimedCount = info ? info.count - info.remainingCount : 0;
+  const packetStatus = info ? formatPacketStatus(info.remainingCount, info.hasClaimed) : null;
+
   return (
-    <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
+    <div className="enhanced-card">
       <div className="text-center mb-6">
         <div className="text-4xl mb-3">🔍</div>
         <h2 className="text-2xl font-bold text-white mb-2">红包信息</h2>
         <p className="text-white opacity-80">查询和领取红包</p>
+      </div>
+
+      {/* 连接状态指示器 */}
+      <div className="connection-status mb-4">
+        <div className={`status-dot ${info ? 'connected' : ''}`}></div>
+        <span className="text-white text-sm">
+          {info ? '红包已查询' : '等待查询红包'}
+        </span>
       </div>
 
       {/* 红包状态提示 */}
@@ -93,13 +104,13 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
               value={inputPacketId}
               onChange={(e) => setInputPacketId(e.target.value)}
               placeholder={packetId > 0 ? `输入 0-${packetId - 1}` : '暂无红包'}
-              className="flex-1 px-4 py-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent"
+              className="input-enhanced flex-1"
               disabled={packetId === 0}
             />
             <button
               type="submit"
               disabled={packetId === 0}
-              className="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+              className="btn-enhanced btn-primary"
             >
               查询
             </button>
@@ -112,113 +123,96 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
         </div>
       </form>
 
-      {/* 红包详情 */}
+      {/* 红包详情 - 增强版 */}
       {info && !info.error ? (
-        <div className="space-y-6">
-          {/* 红包头部信息 */}
-          <div className="bg-white bg-opacity-10 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">红包 #{info.id}</h3>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                info.isEqual 
-                  ? 'bg-blue-500 bg-opacity-30 text-blue-200' 
-                  : 'bg-yellow-500 bg-opacity-30 text-yellow-200'
-              }`}>
+        <div className="red-packet-details">
+          <div className="packet-info-card">
+            <div className="packet-header">
+              <h4>红包 #{info.id}</h4>
+              <span className="packet-type-badge">
                 {info.isEqual ? '等额红包' : '随机红包'}
               </span>
             </div>
 
-            {/* 状态指示器 */}
-            <div className="flex justify-center mb-4">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl ${
-                isFinished ? 'bg-gray-500 bg-opacity-30' :
-                alreadyClaimed ? 'bg-green-500 bg-opacity-30' :
-                canClaim ? 'bg-red-500 bg-opacity-30 animate-pulse' :
-                'bg-yellow-500 bg-opacity-30'
-              }`}>
-                {isFinished ? '💸' : alreadyClaimed ? '✅' : canClaim ? '🎁' : '⏳'}
+            {/* 统计信息网格 */}
+            <div className="packet-stats">
+              <div className="stat-item">
+                <span className="stat-label">总金额:</span>
+                <span className="stat-value">{info.amount} ETH</span>
               </div>
-            </div>
-
-            {/* 红包统计 */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{info.amount}</div>
-                <div className="text-white opacity-60 text-sm">总金额 (ETH)</div>
+              <div className="stat-item">
+                <span className="stat-label">剩余金额:</span>
+                <span className="stat-value">{info.remainingAmount} ETH</span>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{info.remainingAmount}</div>
-                <div className="text-white opacity-60 text-sm">剩余金额 (ETH)</div>
+              <div className="stat-item">
+                <span className="stat-label">总个数:</span>
+                <span className="stat-value">{info.count}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">剩余个数:</span>
+                <span className="stat-value">{info.remainingCount}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">已抢状态:</span>
+                <span className={`stat-value ${info.hasClaimed ? 'claimed' : 'not-claimed'}`}>
+                  {info.hasClaimed ? '已抢' : '未抢'}
+                </span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">状态:</span>
+                <span className={`stat-value ${packetStatus?.class}`}>
+                  {packetStatus?.text}
+                </span>
               </div>
             </div>
 
             {/* 进度条 */}
-            <div className="mb-4">
-              <div className="flex justify-between text-white text-sm mb-2">
-                <span>领取进度</span>
-                <span>{info.count - info.remainingCount} / {info.count}</span>
-              </div>
-              <div className="w-full bg-white bg-opacity-20 rounded-full h-3">
+            <div className="progress-container">
+              <div className="progress-label">抢红包进度</div>
+              <div className="progress-bar">
                 <div 
-                  className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
+                  className="progress-fill"
                   style={{ width: `${progressPercent}%` }}
                 ></div>
               </div>
+              <div className="progress-text">{claimedCount} / {info.count}</div>
             </div>
 
-            {/* 状态信息 */}
-            <div className="text-center">
-              {isFinished && (
-                <div className="text-gray-300 font-medium">
-                  🎉 红包已被抢完
-                </div>
-              )}
-              {alreadyClaimed && !isFinished && (
-                <div className="text-green-300 font-medium">
-                  ✨ 您已经领取过这个红包
-                </div>
-              )}
+            {/* 操作按钮 */}
+            <div className="action-buttons">
               {canClaim && (
-                <div className="text-yellow-300 font-medium animate-pulse">
-                  💰 可以领取红包！
-                </div>
+                <button
+                  onClick={handleGrab}
+                  disabled={isLoading}
+                  className="claim-btn"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="loading-spinner"></div>
+                      <span>抢红包中...</span>
+                    </div>
+                  ) : (
+                    '🎁 抢红包'
+                  )}
+                </button>
               )}
-              {!canClaim && !alreadyClaimed && !isFinished && (
-                <div className="text-blue-300 font-medium">
-                  🔍 红包信息已加载
-                </div>
+              
+              {isFinished && (
+                <button
+                  className="claim-btn"
+                  disabled={true}
+                >
+                  😢 红包已抢完
+                </button>
               )}
-            </div>
-          </div>
 
-          {/* 操作按钮 */}
-          <div className="space-y-3">
-            {canClaim && (
               <button
-                onClick={handleGrab}
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg"
+                onClick={() => onQueryRedPacket(info.id)}
+                className="refresh-btn"
               >
-                {isLoading ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>领取中...</span>
-                  </div>
-                ) : (
-                  <>
-                    <span className="mr-2">🎁</span>
-                    立即领取红包
-                  </>
-                )}
+                🔄 刷新状态
               </button>
-            )}
-
-            <button
-              onClick={() => onQueryRedPacket(info.id)}
-              className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200"
-            >
-              🔄 刷新状态
-            </button>
+            </div>
           </div>
         </div>
       ) : info && info.error ? (
@@ -226,12 +220,10 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
         <div className="text-center py-8">
           <div className="text-6xl mb-4 opacity-50">❌</div>
           <h3 className="text-white text-xl font-bold mb-4">查询失败</h3>
-          <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-4 mb-4">
-            <div className="text-red-200 text-sm whitespace-pre-line">
-              {info.error}
-            </div>
+          <div className="status-message status-error">
+            {info.error}
           </div>
-          <p className="text-white opacity-70 text-sm">
+          <p className="text-white opacity-70 text-sm mt-2">
             请检查网络连接和合约配置
           </p>
         </div>
@@ -256,11 +248,9 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
 
       {/* 错误信息 */}
       {displayError && (
-        <div className="mt-4 bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-4">
-          <div className="flex items-center space-x-2 text-red-200">
-            <span>❌</span>
-            <span>{displayError}</span>
-          </div>
+        <div className="status-message status-error mt-4">
+          <span>❌</span>
+          <span>{displayError}</span>
         </div>
       )}
     </div>
