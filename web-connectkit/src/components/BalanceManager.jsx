@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { getErrorMessage } from '../utils/helpers';
 
 export default function BalanceManager({ 
   balance, 
@@ -13,279 +12,163 @@ export default function BalanceManager({
 }) {
   const [depositAmount, setDepositAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [localDepositError, setLocalDepositError] = useState('');
-  const [localWithdrawError, setLocalWithdrawError] = useState('');
+  const [depositStatus, setDepositStatus] = useState('');
+  const [withdrawStatus, setWithdrawStatus] = useState('');
 
-  const handleDeposit = async (e) => {
-    e.preventDefault();
-    setLocalDepositError('');
-
-    if (!depositAmount || parseFloat(depositAmount) <= 0) {
-      setLocalDepositError('请输入有效的存款金额');
+  const handleDeposit = async () => {
+    if (!depositAmount || isNaN(depositAmount) || parseFloat(depositAmount) <= 0) {
+      setDepositStatus('请输入有效的存款金额');
       return;
     }
 
     try {
+      setDepositStatus(`正在存入 ${depositAmount} ETH...`);
       await onDeposit(depositAmount);
+      setDepositStatus('存款成功！');
       setDepositAmount('');
+      if (onRefresh) onRefresh();
     } catch (err) {
-      setLocalDepositError(getErrorMessage(err));
+      setDepositStatus(`存款失败: ${err.message}`);
     }
   };
 
-  const handleWithdraw = async (e) => {
-    e.preventDefault();
-    setLocalWithdrawError('');
-
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
-      setLocalWithdrawError('请输入有效的提款金额');
-      return;
-    }
-
-    if (parseFloat(withdrawAmount) > parseFloat(balance)) {
-      setLocalWithdrawError('提款金额不能超过合约余额');
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || isNaN(withdrawAmount) || parseFloat(withdrawAmount) <= 0) {
+      setWithdrawStatus('请输入有效的提取金额');
       return;
     }
 
     try {
+      setWithdrawStatus(`正在提取 ${withdrawAmount} ETH...`);
       await onWithdraw(withdrawAmount);
+      setWithdrawStatus('提取成功！');
       setWithdrawAmount('');
+      if (onRefresh) onRefresh();
     } catch (err) {
-      setLocalWithdrawError(getErrorMessage(err));
+      setWithdrawStatus(`提取失败: ${err.message}`);
     }
   };
 
-  const displayDepositError = localDepositError || (depositError ? getErrorMessage(depositError) : '');
-  const displayWithdrawError = localWithdrawError || (withdrawError ? getErrorMessage(withdrawError) : '');
+  const handleDepositKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleDeposit();
+    }
+  };
+
+  const handleWithdrawKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleWithdraw();
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-8">
-        <div className="text-4xl mb-3">💰</div>
-        <h2 className="text-3xl font-bold text-white mb-2">余额管理</h2>
-        <p className="text-white opacity-80">管理您在合约中的ETH余额</p>
-      </div>
-
-      {/* 当前余额显示 */}
-      <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-8 mb-8 shadow-2xl">
-        <div className="text-center">
-          <h3 className="text-white text-lg font-medium mb-4">合约当前余额</h3>
-          <div className="text-5xl font-bold text-white mb-4">
-            {balance} ETH
-          </div>
-          <button
-            onClick={onRefresh}
-            className="px-6 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white font-medium rounded-xl transition-all duration-200"
+    <>
+      {/* 存款功能卡片 */}
+      <div className="card glass">
+        <h3><span className="card-icon">📥</span>存入 ETH</h3>
+        <div className="input-group">
+          <input
+            type="number"
+            value={depositAmount}
+            onChange={(e) => setDepositAmount(e.target.value)}
+            onKeyPress={handleDepositKeyPress}
+            placeholder="输入存款金额（ETH）"
+            step="0.001"
+            min="0.001"
+            className="tooltip"
+            data-tooltip="最小存款金额为 0.001 ETH"
+            disabled={isDepositing}
+          />
+          <button 
+            className="btn btn-success"
+            onClick={handleDeposit}
+            disabled={isDepositing}
           >
-            🔄 刷新余额
+            {isDepositing ? (
+              <>
+                <span className="loading-spinner"></span>
+                存入中...
+              </>
+            ) : (
+              '存入'
+            )}
           </button>
         </div>
+
+        {/* 存款状态显示 */}
+        {depositStatus && (
+          <div className={`status-message ${
+            depositStatus.includes('成功') ? 'status-success' :
+            depositStatus.includes('失败') ? 'status-error' :
+            depositStatus.includes('正在') ? 'status-info' : 'status-warning'
+          }`}>
+            {depositStatus}
+          </div>
+        )}
+
+        {/* 存款错误显示 */}
+        {depositError && (
+          <div className="status-message status-error">
+            存款错误: {depositError.message || depositError}
+          </div>
+        )}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* 存款部分 */}
-        <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-6">
-            <div className="text-3xl mb-2">📥</div>
-            <h3 className="text-xl font-bold text-white mb-2">存入ETH</h3>
-            <p className="text-white opacity-80">向合约存入ETH</p>
-          </div>
-
-          <form onSubmit={handleDeposit} className="space-y-4">
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                存款金额 (ETH)
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  step="0.001"
-                  min="0.001"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="输入存款金额"
-                  className="w-full px-4 py-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent"
-                  disabled={isDepositing}
-                />
-                <div className="absolute right-3 top-3 text-white opacity-60">
-                  ETH
-                </div>
-              </div>
-            </div>
-
-            {/* 快速金额选择 */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                快速选择
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {['0.01', '0.1', '1'].map((amount) => (
-                  <button
-                    key={amount}
-                    type="button"
-                    onClick={() => setDepositAmount(amount)}
-                    className="py-2 px-3 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white text-sm rounded-lg transition-colors"
-                    disabled={isDepositing}
-                  >
-                    {amount} ETH
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {displayDepositError && (
-              <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-3">
-                <div className="flex items-center space-x-2 text-red-200 text-sm">
-                  <span>❌</span>
-                  <span>{displayDepositError}</span>
-                </div>
-              </div>
+      {/* 提款功能卡片 */}
+      <div className="card glass">
+        <h3><span className="card-icon">📤</span>提取 ETH</h3>
+        <div className="input-group">
+          <input
+            type="number"
+            value={withdrawAmount}
+            onChange={(e) => setWithdrawAmount(e.target.value)}
+            onKeyPress={handleWithdrawKeyPress}
+            placeholder="输入提取金额（ETH）"
+            step="0.001"
+            min="0.001"
+            className="tooltip"
+            data-tooltip="确保合约有足够余额"
+            disabled={isWithdrawing}
+          />
+          <button 
+            className="btn btn-primary"
+            onClick={handleWithdraw}
+            disabled={isWithdrawing}
+          >
+            {isWithdrawing ? (
+              <>
+                <span className="loading-spinner"></span>
+                提取中...
+              </>
+            ) : (
+              '提取'
             )}
-
-            <button
-              type="submit"
-              disabled={isDepositing || !depositAmount}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg"
-            >
-              {isDepositing ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>存入中...</span>
-                </div>
-              ) : (
-                <>
-                  <span className="mr-2">📥</span>
-                  存入ETH
-                </>
-              )}
-            </button>
-          </form>
+          </button>
         </div>
 
-        {/* 提款部分 */}
-        <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
-          <div className="text-center mb-6">
-            <div className="text-3xl mb-2">📤</div>
-            <h3 className="text-xl font-bold text-white mb-2">提取ETH</h3>
-            <p className="text-white opacity-80">从合约提取ETH</p>
+        {/* 提款状态显示 */}
+        {withdrawStatus && (
+          <div className={`status-message ${
+            withdrawStatus.includes('成功') ? 'status-success' :
+            withdrawStatus.includes('失败') ? 'status-error' :
+            withdrawStatus.includes('正在') ? 'status-info' : 'status-warning'
+          }`}>
+            {withdrawStatus}
           </div>
+        )}
 
-          <form onSubmit={handleWithdraw} className="space-y-4">
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                提款金额 (ETH)
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  step="0.001"
-                  min="0.001"
-                  max={balance}
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  placeholder="输入提款金额"
-                  className="w-full px-4 py-3 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-white placeholder-white placeholder-opacity-60 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50 focus:border-transparent"
-                  disabled={isWithdrawing}
-                />
-                <div className="absolute right-3 top-3 text-white opacity-60">
-                  ETH
-                </div>
-              </div>
-              <p className="text-white text-xs opacity-60 mt-1">
-                最大可提取: {balance} ETH
-              </p>
-            </div>
+        {/* 提款错误显示 */}
+        {withdrawError && (
+          <div className="status-message status-error">
+            提款错误: {withdrawError.message || withdrawError}
+          </div>
+        )}
 
-            {/* 快速提款选择 */}
-            <div>
-              <label className="block text-white text-sm font-medium mb-2">
-                快速选择
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setWithdrawAmount((parseFloat(balance) * 0.25).toFixed(6))}
-                  className="py-2 px-3 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white text-sm rounded-lg transition-colors"
-                  disabled={isWithdrawing || parseFloat(balance) === 0}
-                >
-                  25%
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setWithdrawAmount((parseFloat(balance) * 0.5).toFixed(6))}
-                  className="py-2 px-3 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white text-sm rounded-lg transition-colors"
-                  disabled={isWithdrawing || parseFloat(balance) === 0}
-                >
-                  50%
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setWithdrawAmount(balance)}
-                  className="py-2 px-3 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white text-sm rounded-lg transition-colors"
-                  disabled={isWithdrawing || parseFloat(balance) === 0}
-                >
-                  全部
-                </button>
-              </div>
-            </div>
-
-            {displayWithdrawError && (
-              <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-3">
-                <div className="flex items-center space-x-2 text-red-200 text-sm">
-                  <span>❌</span>
-                  <span>{displayWithdrawError}</span>
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isWithdrawing || !withdrawAmount || parseFloat(balance) === 0}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg"
-            >
-              {isWithdrawing ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>提取中...</span>
-                </div>
-              ) : (
-                <>
-                  <span className="mr-2">📤</span>
-                  提取ETH
-                </>
-              )}
-            </button>
-          </form>
+        {/* 当前余额提示 */}
+        <div className="status-message status-info" style={{ marginTop: '15px' }}>
+          <strong>当前合约余额:</strong> {balance} ETH
         </div>
       </div>
-
-      {/* 说明信息 */}
-      <div className="mt-8 bg-white bg-opacity-10 rounded-xl p-6">
-        <h4 className="text-white font-medium mb-3 flex items-center">
-          <span className="mr-2">💡</span>
-          使用说明
-        </h4>
-        <div className="grid md:grid-cols-2 gap-6 text-white text-sm opacity-80">
-          <div>
-            <h5 className="font-medium mb-2">关于存款:</h5>
-            <ul className="space-y-1">
-              <li>• 存款会将ETH从您的钱包转入合约</li>
-              <li>• 存入的ETH可用于创建红包</li>
-              <li>• 存款操作需要支付Gas费用</li>
-              <li>• 建议一次性存入足够的金额</li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="font-medium mb-2">关于提款:</h5>
-            <ul className="space-y-1">
-              <li>• 提款会将ETH从合约转回您的钱包</li>
-              <li>• 只能提取合约中的可用余额</li>
-              <li>• 提款操作需要支付Gas费用</li>
-              <li>• 锁定在红包中的ETH无法直接提取</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
