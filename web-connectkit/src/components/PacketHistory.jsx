@@ -1,22 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useContractRead } from 'wagmi';
-import { useAccount } from 'wagmi';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contracts/ChaleeDApp';
-import { calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
-import { fetchPacketHistory, fetchPacketInfo } from '../utils/blockchain';
+import { useState, useEffect, useCallback } from "react";
+import { useContractRead } from "wagmi";
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../contracts/ChaleeDApp";
+import {
+  calculateProgress,
+  formatPacketStatus,
+  debugLog,
+} from "../utils/helpers";
+import { fetchPacketHistory, fetchPacketInfo } from "../utils/blockchain";
 
 export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
-  const { address } = useAccount();
   const [historyData, setHistoryData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [selectedPacket, setSelectedPacket] = useState(null);
 
   // 获取最新红包ID
-  const { data: packetId, refetch: refetchPacketId } = useContractRead({
+  const { data: packetId } = useContractRead({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
-    functionName: 'packetId',
+    functionName: "packetId",
   });
 
   // 加载红包历史记录
@@ -27,21 +29,21 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const latestId = Number(packetId);
-      debugLog('开始加载红包历史', { latestId });
+      debugLog("开始加载红包历史", { latestId });
 
       // 使用新的区块链工具函数批量获取红包历史
       const history = await fetchPacketHistory(latestId, 10);
-      
+
       setHistoryData(history);
-      debugLog('红包历史加载完成', { count: history.length });
+      debugLog("红包历史加载完成", { count: history.length });
     } catch (err) {
-      const errorMsg = '加载历史记录失败: ' + err.message;
+      const errorMsg = "加载历史记录失败: " + err.message;
       setError(errorMsg);
-      debugLog('加载历史记录失败', err);
+      debugLog("加载历史记录失败", err);
     } finally {
       setIsLoading(false);
     }
@@ -56,19 +58,19 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
 
   const handlePacketClick = async (packet) => {
     setSelectedPacket(packet);
-    debugLog('查看红包详情', packet);
-    
+    debugLog("查看红包详情", packet);
+
     // 获取最新的红包信息
     try {
       const updatedPacket = await fetchPacketInfo(packet.id);
       setSelectedPacket(updatedPacket);
     } catch (error) {
-      debugLog('刷新红包详情失败', error);
+      debugLog("刷新红包详情失败", error);
     }
   };
 
   const handleClaimPacket = async (packetId) => {
-    debugLog('尝试抢红包', { packetId });
+    debugLog("尝试抢红包", { packetId });
     try {
       if (onQueryRedPacket) {
         // 先查询红包以更新状态
@@ -83,7 +85,7 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
         loadHistory();
       }, 3000); // 等待3秒让交易确认
     } catch (error) {
-      debugLog('抢红包失败', error);
+      debugLog("抢红包失败", error);
     }
   };
 
@@ -106,16 +108,24 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
         <div className="enhanced-card mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-white">{Number(packetId)}</div>
+              <div className="text-2xl font-bold text-white">
+                {Number(packetId)}
+              </div>
               <div className="text-white opacity-70 text-sm">总红包数</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-white">{historyData.length}</div>
+              <div className="text-2xl font-bold text-white">
+                {historyData.length}
+              </div>
               <div className="text-white opacity-70 text-sm">已加载</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-white">
-                {historyData.filter(p => p.remainingCount > 0 && !p.hasClaimed).length}
+                {
+                  historyData.filter(
+                    (p) => p.remainingCount > 0 && !p.hasClaimed
+                  ).length
+                }
               </div>
               <div className="text-white opacity-70 text-sm">可抢红包</div>
             </div>
@@ -136,9 +146,7 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
               <span>从区块链加载中...</span>
             </div>
           ) : (
-            <>
-              🔄 刷新历史记录
-            </>
+            <>🔄 刷新历史记录</>
           )}
         </button>
       </div>
@@ -158,7 +166,10 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
         <div className="history-container">
           <div className="history-list">
             {historyData.map((packet) => {
-              const packetStatus = formatPacketStatus(packet.remainingCount, packet.hasClaimed);
+              const packetStatus = formatPacketStatus(
+                packet.remainingCount,
+                packet.hasClaimed
+              );
               const progressPercent = calculateProgress(
                 packet.count - packet.remainingCount,
                 packet.count
@@ -180,22 +191,26 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
 
                   <div className="history-details">
                     <div className="detail-item">
-                      <span>类型: {packet.isEqual ? '等额' : '随机'}</span>
+                      <span>类型: {packet.isEqual ? "等额" : "随机"}</span>
                       <span>总额: {packet.amount} ETH</span>
                     </div>
                     <div className="detail-item">
-                      <span>进度: {claimedCount}/{packet.count}</span>
+                      <span>
+                        进度: {claimedCount}/{packet.count}
+                      </span>
                       <span>剩余: {packet.remainingAmount} ETH</span>
                     </div>
                     <div className="detail-item">
-                      <span>状态: {packet.hasClaimed ? '已参与' : '未参与'}</span>
+                      <span>
+                        状态: {packet.hasClaimed ? "已参与" : "未参与"}
+                      </span>
                       <span>剩余: {packet.remainingCount} 个</span>
                     </div>
                   </div>
 
                   {/* 进度条 */}
                   <div className="progress-bar-small">
-                    <div 
+                    <div
                       className="progress-fill-small"
                       style={{ width: `${progressPercent}%` }}
                     ></div>
@@ -203,7 +218,7 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
 
                   {/* 操作按钮 */}
                   <div className="flex space-x-3 mt-3">
-                    <button 
+                    <button
                       className="flex-1 btn-enhanced bg-white bg-opacity-20 text-white text-sm py-2"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -213,7 +228,7 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
                       📋 查询详情
                     </button>
                     {packet.remainingCount > 0 && !packet.hasClaimed && (
-                      <button 
+                      <button
                         className="flex-1 claim-btn text-sm py-2"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -235,7 +250,9 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
           <div className="text-6xl mb-4 opacity-50">📜</div>
           <h3 className="text-white text-xl font-bold mb-2">暂无红包历史</h3>
           <p className="text-white opacity-70 mb-6">
-            {Number(packetId) === 0 ? '还没有人创建过红包' : '正在从区块链加载历史记录...'}
+            {Number(packetId) === 0
+              ? "还没有人创建过红包"
+              : "正在从区块链加载历史记录..."}
           </p>
           <div className="space-y-2 text-white text-sm opacity-60">
             <p>💡 创建第一个红包来开始使用</p>
@@ -255,18 +272,22 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
                 <div className="packet-header">
                   <h4>红包 #{selectedPacket.id}</h4>
                   <span className="packet-type-badge">
-                    {selectedPacket.isEqual ? '等额红包' : '随机红包'}
+                    {selectedPacket.isEqual ? "等额红包" : "随机红包"}
                   </span>
                 </div>
 
                 <div className="packet-stats">
                   <div className="stat-item">
                     <span className="stat-label">总金额:</span>
-                    <span className="stat-value">{selectedPacket.amount} ETH</span>
+                    <span className="stat-value">
+                      {selectedPacket.amount} ETH
+                    </span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">剩余金额:</span>
-                    <span className="stat-value">{selectedPacket.remainingAmount} ETH</span>
+                    <span className="stat-value">
+                      {selectedPacket.remainingAmount} ETH
+                    </span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">总个数:</span>
@@ -274,18 +295,36 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">剩余个数:</span>
-                    <span className="stat-value">{selectedPacket.remainingCount}</span>
+                    <span className="stat-value">
+                      {selectedPacket.remainingCount}
+                    </span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">参与状态:</span>
-                    <span className={`stat-value ${selectedPacket.hasClaimed ? 'claimed' : 'not-claimed'}`}>
-                      {selectedPacket.hasClaimed ? '已参与' : '未参与'}
+                    <span
+                      className={`stat-value ${
+                        selectedPacket.hasClaimed ? "claimed" : "not-claimed"
+                      }`}
+                    >
+                      {selectedPacket.hasClaimed ? "已参与" : "未参与"}
                     </span>
                   </div>
                   <div className="stat-item">
                     <span className="stat-label">红包状态:</span>
-                    <span className={`stat-value ${formatPacketStatus(selectedPacket.remainingCount, selectedPacket.hasClaimed).class}`}>
-                      {formatPacketStatus(selectedPacket.remainingCount, selectedPacket.hasClaimed).text}
+                    <span
+                      className={`stat-value ${
+                        formatPacketStatus(
+                          selectedPacket.remainingCount,
+                          selectedPacket.hasClaimed
+                        ).class
+                      }`}
+                    >
+                      {
+                        formatPacketStatus(
+                          selectedPacket.remainingCount,
+                          selectedPacket.hasClaimed
+                        ).text
+                      }
                     </span>
                   </div>
                 </div>
@@ -293,18 +332,19 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
                 <div className="progress-container">
                   <div className="progress-label">抢红包进度</div>
                   <div className="progress-bar">
-                    <div 
+                    <div
                       className="progress-fill"
-                      style={{ 
+                      style={{
                         width: `${calculateProgress(
                           selectedPacket.count - selectedPacket.remainingCount,
                           selectedPacket.count
-                        )}%` 
+                        )}%`,
                       }}
                     ></div>
                   </div>
                   <div className="progress-text">
-                    {selectedPacket.count - selectedPacket.remainingCount} / {selectedPacket.count}
+                    {selectedPacket.count - selectedPacket.remainingCount} /{" "}
+                    {selectedPacket.count}
                   </div>
                 </div>
 
@@ -315,16 +355,17 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
                   >
                     📋 查询最新状态
                   </button>
-                  
-                  {selectedPacket.remainingCount > 0 && !selectedPacket.hasClaimed && (
-                    <button
-                      onClick={() => handleClaimPacket(selectedPacket.id)}
-                      className="claim-btn"
-                    >
-                      🎁 抢红包
-                    </button>
-                  )}
-                  
+
+                  {selectedPacket.remainingCount > 0 &&
+                    !selectedPacket.hasClaimed && (
+                      <button
+                        onClick={() => handleClaimPacket(selectedPacket.id)}
+                        className="claim-btn"
+                      >
+                        🎁 抢红包
+                      </button>
+                    )}
+
                   <button
                     onClick={() => setSelectedPacket(null)}
                     className="refresh-btn"
@@ -348,9 +389,18 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
           <div>
             <h5 className="font-medium mb-2">状态说明:</h5>
             <ul className="space-y-1">
-              <li>• <span className="text-red-300">🎁 可抢:</span> 红包还有剩余，您未参与</li>
-              <li>• <span className="text-green-300">✅ 已参与:</span> 您已经抢过这个红包</li>
-              <li>• <span className="text-gray-300">💸 已抢完:</span> 红包已被全部领取</li>
+              <li>
+                • <span className="text-red-300">🎁 可抢:</span>{" "}
+                红包还有剩余，您未参与
+              </li>
+              <li>
+                • <span className="text-green-300">✅ 已参与:</span>{" "}
+                您已经抢过这个红包
+              </li>
+              <li>
+                • <span className="text-gray-300">💸 已抢完:</span>{" "}
+                红包已被全部领取
+              </li>
             </ul>
           </div>
           <div>
@@ -363,16 +413,18 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-4 p-3 bg-yellow-500 bg-opacity-20 rounded-lg">
           <div className="text-yellow-200 text-sm">
-            <strong>🎉 增强功能：</strong>现在使用优化的区块链工具函数，支持批量并发获取数据，加载速度更快更稳定！
+            <strong>🎉 增强功能：</strong>
+            现在使用优化的区块链工具函数，支持批量并发获取数据，加载速度更快更稳定！
           </div>
         </div>
-        
+
         <div className="mt-2 p-3 bg-blue-500 bg-opacity-20 rounded-lg">
           <div className="text-blue-200 text-sm">
-            <strong>⛓️ 链上数据：</strong>所有红包信息都直接从以太坊区块链获取，确保数据真实可靠。
+            <strong>⛓️ 链上数据：</strong>
+            所有红包信息都直接从以太坊区块链获取，确保数据真实可靠。
           </div>
         </div>
       </div>

@@ -49,7 +49,6 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
 
   const canClaim = info && !info.hasClaimed && info.remainingCount > 0 && parseFloat(info.remainingAmount) > 0;
   const isFinished = info && info.remainingCount === 0;
-  const alreadyClaimed = info && info.hasClaimed;
 
   const progressPercent = info 
     ? calculateProgress(info.count - info.remainingCount, info.count)

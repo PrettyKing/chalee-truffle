@@ -130,7 +130,6 @@ export async function fetchPacketHistory(latestPacketId, maxCount = 10) {
     
     const contract = await createReadOnlyContract();
     const historyCount = Math.min(latestPacketId, maxCount);
-    const history = [];
     
     // 创建并发请求
     const promises = [];
@@ -279,6 +278,7 @@ export function formatContractError(error) {
 }
 
 // 导出所有函数
+// eslint-disable-next-line
 export default {
   createReadOnlyContract,
   fetchPacketInfo,
