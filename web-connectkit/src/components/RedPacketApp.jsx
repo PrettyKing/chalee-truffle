@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { ConnectKitButton } from 'connectkit';
 import { useRedPacket } from '../hooks/useRedPacket';
@@ -12,7 +12,7 @@ import { formatAddress } from '../utils/helpers';
 
 export default function RedPacketApp() {
   const { address, isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState('redpacket');
+  const [connectionStatus, setConnectionStatus] = useState('未连接');
   
   const {
     redPacketInfo,
@@ -47,6 +47,7 @@ export default function RedPacketApp() {
     
     // 所有者功能
     transferToOwner,
+    resetPacketCount,
     isTransferring,
     transferError,
     
@@ -55,170 +56,162 @@ export default function RedPacketApp() {
     autoQueryLatestPacket,
   } = useRedPacket();
 
-  const tabs = [
-    { id: 'redpacket', name: '🎁 红包', icon: '🎁' },
-    { id: 'balance', name: '💰 余额', icon: '💰' },
-    { id: 'userinfo', name: '👤 信息', icon: '👤' },
-    { id: 'history', name: '📜 历史', icon: '📜' },
-  ];
+  // 更新连接状态
+  useEffect(() => {
+    if (isConnected && address) {
+      setConnectionStatus('已连接');
+    } else {
+      setConnectionStatus('未连接');
+    }
+  }, [isConnected, address]);
 
-  if (isOwner) {
-    tabs.push({ id: 'owner', name: '🏆 管理', icon: '🏆' });
-  }
+  // 自动查询最新红包
+  useEffect(() => {
+    if (isConnected && packetId > 0) {
+      autoQueryLatestPacket?.();
+    }
+  }, [isConnected, packetId, autoQueryLatestPacket]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-green-500">
-      <div className="container mx-auto px-4 py-8">
-        {/* 标题区域 */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
-            🧧 Chalee DApp
-          </h1>
-          <p className="text-white text-xl opacity-90 mb-6">
-            基于以太坊的去中心化红包应用 - ConnectKit版
-          </p>
-          
-          {/* ConnectKit 连接按钮 */}
-          <div className="flex justify-center mb-6">
+    <div className="container">
+      {/* 头部区域 */}
+      <div className="header">
+        <h1>Chalee DApp</h1>
+        <p className="subtitle">现代化的以太坊智能合约交互平台</p>
+      </div>
+
+      {/* 连接状态指示器 */}
+      <div className="connection-status">
+        <div className={`status-dot ${isConnected ? 'connected' : ''}`}></div>
+        <span>{connectionStatus}</span>
+      </div>
+
+      {/* 所有者信息 */}
+      {isConnected && isOwner && (
+        <div className="owner-info owner-badge">
+          <span>您拥有合约的完全控制权</span>
+        </div>
+      )}
+
+      {/* 钱包连接卡片 */}
+      <div className="card glass" style={{ marginBottom: '20px' }}>
+        <h3><span className="card-icon">🔗</span>钱包连接</h3>
+        <div className="input-group">
+          <div className="input-row">
             <ConnectKitButton 
               theme="retro"
               showBalance={true}
               showAvatar={true}
             />
           </div>
-
-          {/* 连接状态信息 */}
-          {isConnected && (
-            <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl p-4 inline-block">
-              <div className="flex items-center space-x-4 text-white">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>已连接: {formatAddress(address)}</span>
-                </div>
-                <div className="border-l border-white border-opacity-30 pl-4">
-                  <span>合约余额: {contractBalance} ETH</span>
-                </div>
-                <div className="border-l border-white border-opacity-30 pl-4">
-                  <span>红包总数: {packetId}</span>
-                </div>
-                {isOwner && (
-                  <div className="border-l border-white border-opacity-30 pl-4">
-                    <span className="bg-yellow-500 text-black px-2 py-1 rounded text-sm font-bold">
-                      所有者
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
+        
+        {/* 账户信息 */}
+        {isConnected && (
+          <div className="account-info">
+            <div>已连接账户: {formatAddress(address)}</div>
+            <div className="account-address">{address}</div>
+          </div>
+        )}
 
-        {isConnected ? (
-          <>
-            {/* 导航标签 */}
-            <div className="flex justify-center mb-8">
-              <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl p-2">
-                <div className="flex space-x-2">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-                        activeTab === tab.id
-                          ? 'bg-white text-purple-600 shadow-lg transform scale-105'
-                          : 'text-white hover:bg-white hover:bg-opacity-20'
-                      }`}
-                    >
-                      <span className="mr-2">{tab.icon}</span>
-                      {tab.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* 内容区域 */}
-            <div className="max-w-6xl mx-auto">
-              {activeTab === 'redpacket' && (
-                <div className="grid md:grid-cols-2 gap-8">
-                  <CreateRedPacket
-                    onCreateRedPacket={createRedPacket}
-                    isLoading={isCreating}
-                    error={createError}
-                  />
-                  <RedPacketInfo
-                    info={redPacketInfo}
-                    onGrabRedPacket={grabRedPacket}
-                    onQueryRedPacket={queryRedPacket}
-                    isLoading={isGrabbing || isQueryingPacket}
-                    error={grabError || queryError}
-                    packetId={packetId}
-                  />
-                </div>
-              )}
-
-              {activeTab === 'balance' && (
-                <BalanceManager
-                  balance={contractBalance}
-                  onDeposit={deposit}
-                  onWithdraw={withdraw}
-                  isDepositing={isDepositing}
-                  isWithdrawing={isWithdrawing}
-                  depositError={depositError}
-                  withdrawError={withdrawError}
-                  onRefresh={refreshData}
-                />
-              )}
-
-              {activeTab === 'userinfo' && (
-                <UserInfoManager
-                  userInfo={userInfo}
-                  onSetUserInfo={setUserInfo}
-                  isLoading={isSettingInfo}
-                  error={setInfoError}
-                />
-              )}
-
-              {activeTab === 'history' && (
-                <PacketHistory 
-                  onQueryRedPacket={queryRedPacket}
-                  onGrabRedPacket={grabRedPacket}
-                />
-              )}
-
-              {activeTab === 'owner' && isOwner && (
-                <OwnerPanel
-                  onTransferToOwner={transferToOwner}
-                  isTransferring={isTransferring}
-                  transferError={transferError}
-                  contractBalance={contractBalance}
-                  onRefresh={refreshData}
-                />
-              )}
-            </div>
-          </>
-        ) : (
-          /* 未连接状态 */
-          <div className="text-center">
-            <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-12 inline-block">
-              <div className="text-8xl mb-6">🔗</div>
-              <h2 className="text-white text-2xl font-bold mb-4">
-                连接钱包开始使用
-              </h2>
-              <p className="text-white text-lg opacity-80 mb-6">
-                请连接您的 Web3 钱包来使用红包功能
-              </p>
-              <div className="space-y-2 text-white text-sm opacity-70">
-                <p>✨ 创建和领取红包</p>
-                <p>💰 管理您的ETH余额</p>
-                <p>👤 设置个人信息</p>
-                <p>📜 查看红包历史（真实链上数据）</p>
-                <p>🔍 使用 ConnectKit 的现代化UI界面</p>
-              </div>
-            </div>
+        {/* 余额显示 */}
+        {isConnected && (
+          <div className="balance-display">
+            <div className="balance-amount">Ξ {contractBalance}</div>
+            <div className="balance-label">合约当前余额</div>
           </div>
         )}
       </div>
+
+      {/* 功能卡片网格 */}
+      {isConnected && (
+        <div className="grid">
+          {/* 信息管理卡片 */}
+          <UserInfoManager
+            userInfo={userInfo}
+            onSetUserInfo={setUserInfo}
+            isLoading={isSettingInfo}
+            error={setInfoError}
+          />
+
+          {/* 存取款管理卡片 */}
+          <BalanceManager
+            balance={contractBalance}
+            onDeposit={deposit}
+            onWithdraw={withdraw}
+            isDepositing={isDepositing}
+            isWithdrawing={isWithdrawing}
+            depositError={depositError}
+            withdrawError={withdrawError}
+            onRefresh={refreshData}
+          />
+
+          {/* 创建红包卡片 */}
+          <CreateRedPacket
+            onCreateRedPacket={createRedPacket}
+            isLoading={isCreating}
+            error={createError}
+          />
+
+          {/* 红包状态和抢红包卡片 */}
+          <RedPacketInfo
+            info={redPacketInfo}
+            onGrabRedPacket={grabRedPacket}
+            onQueryRedPacket={queryRedPacket}
+            isLoading={isGrabbing || isQueryingPacket}
+            error={grabError || queryError}
+            packetId={packetId}
+          />
+
+          {/* 红包历史记录卡片 */}
+          <PacketHistory 
+            onQueryRedPacket={queryRedPacket}
+            onGrabRedPacket={grabRedPacket}
+          />
+
+          {/* 所有者操作卡片 */}
+          {isOwner && (
+            <OwnerPanel
+              onTransferToOwner={transferToOwner}
+              onResetPacketCount={resetPacketCount}
+              isTransferring={isTransferring}
+              transferError={transferError}
+              contractBalance={contractBalance}
+              onRefresh={refreshData}
+            />
+          )}
+        </div>
+      )}
+
+      {/* 未连接状态 */}
+      {!isConnected && (
+        <div className="grid">
+          <div className="card glass">
+            <h3><span className="card-icon">🔗</span>开始使用</h3>
+            <div className="input-group">
+              <p style={{ marginBottom: '20px', opacity: '0.9' }}>
+                请先连接您的 Web3 钱包来使用红包功能
+              </p>
+              <div style={{ textAlign: 'center' }}>
+                <ConnectKitButton 
+                  theme="retro"
+                  showBalance={false}
+                  showAvatar={false}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: '20px', fontSize: '0.9rem', opacity: '0.8' }}>
+              <div style={{ marginBottom: '10px' }}>✨ 创建和领取红包</div>
+              <div style={{ marginBottom: '10px' }}>💰 管理您的ETH余额</div>
+              <div style={{ marginBottom: '10px' }}>👤 设置个人信息</div>
+              <div style={{ marginBottom: '10px' }}>📜 查看红包历史</div>
+              <div>🔍 使用 ConnectKit 的现代化UI</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="footer-space"></div>
     </div>
   );
 }
