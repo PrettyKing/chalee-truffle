@@ -1,162 +1,119 @@
-import { getErrorMessage } from '../utils/helpers';
+import { useState } from 'react';
 
 export default function OwnerPanel({ 
   onTransferToOwner, 
+  onResetPacketCount,
   isTransferring, 
   transferError, 
   contractBalance, 
   onRefresh 
 }) {
-  const handleTransfer = async () => {
+  const [status, setStatus] = useState('');
+
+  const handleTransferToOwner = async () => {
     try {
+      setStatus('正在转移资金到所有者...');
       await onTransferToOwner();
+      setStatus('转移成功！');
+      if (onRefresh) onRefresh();
     } catch (err) {
-      console.error('转移失败:', err);
+      let errorMessage = err.message;
+      if (errorMessage.includes('ACTION_REJECTED')) {
+        errorMessage = '用户拒绝了交易';
+      } else if (errorMessage.includes('Only the owner')) {
+        errorMessage = '只有合约所有者才能执行此操作';
+      } else if (errorMessage.includes('No balance')) {
+        errorMessage = '合约没有余额可转移';
+      }
+      setStatus(`转移失败: ${errorMessage}`);
     }
   };
 
-  const displayError = transferError ? getErrorMessage(transferError) : '';
+  const handleResetPacketCount = async () => {
+    try {
+      setStatus('正在重置红包计数器...');
+      await onResetPacketCount();
+      setStatus('重置成功！');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      let errorMessage = err.message;
+      if (errorMessage.includes('ACTION_REJECTED')) {
+        errorMessage = '用户拒绝了交易';
+      } else if (errorMessage.includes('Only owner')) {
+        errorMessage = '只有合约所有者才能执行此操作';
+      }
+      setStatus(`重置失败: ${errorMessage}`);
+    }
+  };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-8 shadow-2xl">
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-3">🏆</div>
-          <h2 className="text-3xl font-bold text-white mb-2">所有者管理面板</h2>
-          <p className="text-white opacity-80">合约所有者专用功能</p>
+    <div className="card glass">
+      <h3><span className="card-icon">🏆</span>所有者操作</h3>
+      
+      <div className="input-group">
+        <button 
+          className="btn btn-warning tooltip"
+          onClick={handleTransferToOwner}
+          disabled={isTransferring}
+          data-tooltip="只有合约所有者可以执行此操作"
+        >
+          {isTransferring ? (
+            <>
+              <span className="loading-spinner"></span>
+              转移中...
+            </>
+          ) : (
+            '转移所有余额到合约所有者'
+          )}
+        </button>
+        
+        <button 
+          className="btn btn-info tooltip"
+          onClick={handleResetPacketCount}
+          disabled={isTransferring}
+          data-tooltip="重置红包计数器（仅测试用）"
+        >
+          {isTransferring ? (
+            <>
+              <span className="loading-spinner"></span>
+              重置中...
+            </>
+          ) : (
+            '重置红包计数器'
+          )}
+        </button>
+      </div>
+
+      {/* 状态显示 */}
+      {status && (
+        <div className={`status-message ${
+          status.includes('成功') ? 'status-success' :
+          status.includes('失败') ? 'status-error' :
+          status.includes('正在') ? 'status-info' : 'status-warning'
+        }`}>
+          {status}
         </div>
+      )}
 
-        {/* 权限提示 */}
-        <div className="bg-yellow-500 bg-opacity-20 border border-yellow-500 border-opacity-50 rounded-xl p-4 mb-8">
-          <div className="flex items-center space-x-2 text-yellow-200">
-            <span>⚠️</span>
-            <span className="font-medium">您拥有合约的完全控制权</span>
-          </div>
+      {/* 错误显示 */}
+      {transferError && (
+        <div className="status-message status-error">
+          错误: {transferError.message || transferError}
         </div>
+      )}
 
-        {/* 合约状态 */}
-        <div className="bg-white bg-opacity-10 rounded-2xl p-6 mb-8">
-          <h3 className="text-white font-medium mb-4 flex items-center">
-            <span className="mr-2">📊</span>
-            合约状态
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-white opacity-70">合约余额:</span>
-              <span className="text-white font-medium">{contractBalance} ETH</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white opacity-70">可转移余额:</span>
-              <span className="text-white font-medium">{contractBalance} ETH</span>
-            </div>
-          </div>
-        </div>
+      {/* 合约信息 */}
+      <div className="status-message status-info" style={{ marginTop: '15px' }}>
+        <strong>合约当前余额:</strong> {contractBalance} ETH
+      </div>
 
-        {/* 所有者操作 */}
-        <div className="space-y-6">
-          {/* 转移资金 */}
-          <div className="bg-white bg-opacity-10 rounded-2xl p-6">
-            <h3 className="text-white font-medium mb-4 flex items-center">
-              <span className="mr-2">💸</span>
-              转移合约资金
-            </h3>
-            <p className="text-white opacity-70 text-sm mb-4">
-              将合约中的所有可用余额转移到所有者账户
-            </p>
-            
-            {parseFloat(contractBalance) > 0 ? (
-              <button
-                onClick={handleTransfer}
-                disabled={isTransferring}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 shadow-lg"
-              >
-                {isTransferring ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>转移中...</span>
-                  </div>
-                ) : (
-                  <>
-                    <span className="mr-2">💸</span>
-                    转移 {contractBalance} ETH 到所有者账户
-                  </>
-                )}
-              </button>
-            ) : (
-              <div className="text-center py-4">
-                <div className="text-white opacity-60">
-                  合约暂无可转移余额
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 其他管理功能 */}
-          <div className="bg-white bg-opacity-10 rounded-2xl p-6">
-            <h3 className="text-white font-medium mb-4 flex items-center">
-              <span className="mr-2">🔧</span>
-              管理功能
-            </h3>
-            <div className="space-y-3">
-              <button
-                onClick={onRefresh}
-                className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200"
-              >
-                🔄 刷新合约数据
-              </button>
-              
-              <button
-                disabled
-                className="w-full bg-gray-500 bg-opacity-30 text-gray-300 font-medium py-3 px-6 rounded-xl cursor-not-allowed"
-                title="功能开发中"
-              >
-                🔧 重置红包计数器 (开发中)
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* 错误信息 */}
-        {displayError && (
-          <div className="mt-6 bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-4">
-            <div className="flex items-center space-x-2 text-red-200">
-              <span>❌</span>
-              <span>{displayError}</span>
-            </div>
-          </div>
-        )}
-
-        {/* 使用说明 */}
-        <div className="mt-8 bg-white bg-opacity-10 rounded-xl p-6">
-          <h4 className="text-white font-medium mb-3 flex items-center">
-            <span className="mr-2">💡</span>
-            使用说明
-          </h4>
-          <ul className="text-white text-sm opacity-80 space-y-2">
-            <li>• <strong>转移资金:</strong> 将合约中的所有可用余额转移到所有者账户</li>
-            <li>• <strong>权限控制:</strong> 只有合约所有者才能执行这些操作</li>
-            <li>• <strong>Gas费用:</strong> 所有操作都需要支付Gas费用</li>
-            <li>• <strong>安全提示:</strong> 请谨慎使用所有者权限，避免误操作</li>
-          </ul>
-        </div>
-
-        {/* 安全警告 */}
-        <div className="mt-6 bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-4">
-          <div className="flex items-start space-x-2 text-red-200">
-            <span className="mt-0.5">🚨</span>
-            <div>
-              <div className="font-medium mb-1">安全警告</div>
-              <div className="text-sm opacity-90">
-                作为合约所有者，您拥有强大的权限。请确保：
-                <ul className="mt-2 space-y-1 list-disc list-inside">
-                  <li>只在安全的网络环境下操作</li>
-                  <li>仔细确认每个操作的参数</li>
-                  <li>定期备份您的私钥</li>
-                  <li>不要与他人分享所有者权限</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+      {/* 所有者权限说明 */}
+      <div className="status-message status-warning" style={{ fontSize: '0.9rem' }}>
+        <strong>所有者权限:</strong>
+        <div style={{ marginTop: '8px', fontSize: '0.85rem' }}>
+          • 转移合约中的所有ETH到所有者地址<br/>
+          • 重置红包计数器（开发测试功能）<br/>
+          • 这些操作不可逆，请谨慎操作
         </div>
       </div>
     </div>
