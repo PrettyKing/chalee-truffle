@@ -1,4 +1,3 @@
-import 'connectkit/styles.css';
 import {
   ConnectKitProvider,
   getDefaultConfig,

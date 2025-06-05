@@ -6,7 +6,7 @@ import {
   formatPacketStatus,
   debugLog,
 } from "../utils/helpers";
-import { fetchPacketHistory, fetchPacketInfo } from "../utils/blockchain";
+// import { fetchPacketHistory, fetchPacketInfo } from "../utils/blockchain";
 
 export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
   const [historyData, setHistoryData] = useState([]);
