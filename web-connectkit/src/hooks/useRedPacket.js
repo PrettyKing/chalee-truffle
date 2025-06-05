@@ -31,6 +31,14 @@ export function useRedPacket() {
     abi: CONTRACT_ABI,
     functionName: 'packetId',
   });
+  // 获取红包信息
+  const { data: packetInfo, refetch: refetchPacketInfo } = useContractRead({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'getPacketInfo',
+    args: [currentPacketId],
+    enabled: isConnected && currentPacketId >= 0,
+  });
 
   // 获取用户信息
   const { data: info, refetch: refetchUserInfo } = useContractRead({
@@ -225,17 +233,11 @@ export function useRedPacket() {
         throw new Error('红包ID必须大于等于0');
       }
       
-      // 由于我们无法直接调用 getPacketInfo（会导致错误），我们提供一个友好的提示
-      const mockInfo = {
-        id: packetIdValue,
-        isEqual: false,
-        count: 0,
-        remainingCount: 0,
-        amount: '0',
-        remainingAmount: '0',
-        hasClaimed: false,
-        error: `暂时无法查询红包ID ${packetIdValue}。请确保：\n1. 该红包ID确实存在\n2. 合约部署正确\n3. 网络连接正常`,
-      };
+      // 查询红包信息
+      const result = await refetchPacketInfo({ args: [packetIdValue] });
+      if (result.error) {
+        throw new Error(`查询红包失败: ${result.error.message}`);
+      }
       
       setRedPacketInfo(mockInfo);
       return false; // 返回 false 表示查询失败

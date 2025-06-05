@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useContractRead } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contracts/ChaleeDApp';
-import { formatEth, calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
+import { calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
 
 export default function PacketHistory() {
   const [historyData, setHistoryData] = useState([]);
@@ -15,6 +15,7 @@ export default function PacketHistory() {
     abi: CONTRACT_ABI,
     functionName: 'packetId',
   });
+
 
   const loadHistory = async () => {
     if (!packetId || Number(packetId) === 0) {
@@ -36,26 +37,8 @@ export default function PacketHistory() {
       // 在实际应用中，这里应该调用合约的 getPacketInfo 方法
       for (let i = latestId - 1; i >= Math.max(0, latestId - maxHistory); i--) {
         // 这里应该是实际的合约调用
-        // const packetInfo = await contract.getPacketInfo(i);
-        
-        // 模拟数据 - 在实际应用中替换为真实合约调用
-        const totalCount = Math.floor(Math.random() * 10) + 1;
-        const remainingCount = Math.floor(Math.random() * totalCount);
-        const totalAmount = Math.random() * 0.1 + 0.01;
-        const remainingAmount = (remainingCount / totalCount) * totalAmount;
-        
-        const mockData = {
-          id: i,
-          isEqual: Math.random() > 0.5,
-          count: totalCount,
-          remainingCount: remainingCount,
-          amount: formatEth(BigInt(Math.floor(totalAmount * 1e18))),
-          remainingAmount: formatEth(BigInt(Math.floor(remainingAmount * 1e18))),
-          hasClaimed: Math.random() > 0.7,
-          timestamp: Date.now() - (latestId - i) * 3600000, // 模拟时间戳
-        };
-
-        history.push(mockData);
+        const packetInfo = await contract.getPacketInfo(i);
+        history.push(packetInfo);
       }
 
       setHistoryData(history);
