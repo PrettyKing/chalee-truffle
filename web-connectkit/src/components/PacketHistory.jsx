@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useContractRead } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contracts/ChaleeDApp';
+import { formatEth, calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
 
 export default function PacketHistory() {
   const [historyData, setHistoryData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedPacket, setSelectedPacket] = useState(null);
 
   // 获取最新红包ID
   const { data: packetId } = useContractRead({
@@ -28,29 +30,40 @@ export default function PacketHistory() {
       const latestId = Number(packetId);
       const maxHistory = Math.min(latestId, 10); // 最多显示10个红包
 
+      debugLog('加载红包历史', { latestId, maxHistory });
+
       // 模拟加载历史数据
       // 在实际应用中，这里应该调用合约的 getPacketInfo 方法
       for (let i = latestId - 1; i >= Math.max(0, latestId - maxHistory); i--) {
         // 这里应该是实际的合约调用
         // const packetInfo = await contract.getPacketInfo(i);
         
-        // 模拟数据
+        // 模拟数据 - 在实际应用中替换为真实合约调用
+        const totalCount = Math.floor(Math.random() * 10) + 1;
+        const remainingCount = Math.floor(Math.random() * totalCount);
+        const totalAmount = Math.random() * 0.1 + 0.01;
+        const remainingAmount = (remainingCount / totalCount) * totalAmount;
+        
         const mockData = {
           id: i,
           isEqual: Math.random() > 0.5,
-          count: Math.floor(Math.random() * 10) + 1,
-          remainingCount: Math.floor(Math.random() * 5),
-          amount: (Math.random() * 0.1 + 0.01).toFixed(4),
-          remainingAmount: (Math.random() * 0.05).toFixed(4),
+          count: totalCount,
+          remainingCount: remainingCount,
+          amount: formatEth(BigInt(Math.floor(totalAmount * 1e18))),
+          remainingAmount: formatEth(BigInt(Math.floor(remainingAmount * 1e18))),
           hasClaimed: Math.random() > 0.7,
+          timestamp: Date.now() - (latestId - i) * 3600000, // 模拟时间戳
         };
 
         history.push(mockData);
       }
 
       setHistoryData(history);
+      debugLog('红包历史加载完成', { count: history.length });
     } catch (err) {
-      setError('加载历史记录失败: ' + err.message);
+      const errorMsg = '加载历史记录失败: ' + err.message;
+      setError(errorMsg);
+      debugLog('加载历史记录失败', err);
     } finally {
       setIsLoading(false);
     }
@@ -62,14 +75,15 @@ export default function PacketHistory() {
     }
   }, [packetId]);
 
-  const getStatusInfo = (packet) => {
-    if (packet.remainingCount === 0) {
-      return { status: '已抢完', className: 'bg-gray-500 bg-opacity-30 text-gray-300', icon: '💸' };
-    } else if (packet.hasClaimed) {
-      return { status: '已参与', className: 'bg-green-500 bg-opacity-30 text-green-300', icon: '✅' };
-    } else {
-      return { status: '可抢', className: 'bg-red-500 bg-opacity-30 text-red-300', icon: '🎁' };
-    }
+  const handlePacketClick = (packet) => {
+    setSelectedPacket(packet);
+    debugLog('查看红包详情', packet);
+  };
+
+  const handleClaimPacket = (packetId) => {
+    debugLog('尝试抢红包', { packetId });
+    // 这里应该调用父组件的抢红包函数
+    console.log('抢红包功能需要在父组件中实现', packetId);
   };
 
   return (
@@ -85,11 +99,11 @@ export default function PacketHistory() {
         <button
           onClick={loadHistory}
           disabled={isLoading}
-          className="px-6 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white font-medium rounded-xl transition-all duration-200"
+          className="btn-enhanced btn-primary"
         >
           {isLoading ? (
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="loading-spinner"></div>
               <span>加载中...</span>
             </div>
           ) : (
@@ -102,100 +116,89 @@ export default function PacketHistory() {
 
       {/* 历史记录列表 */}
       {error ? (
-        <div className="bg-red-500 bg-opacity-20 border border-red-500 border-opacity-50 rounded-xl p-6 text-center">
+        <div className="status-message status-error text-center p-6">
           <div className="text-red-200 mb-2">❌ {error}</div>
           <button
             onClick={loadHistory}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors"
+            className="btn-enhanced btn-danger mt-2"
           >
             重试
           </button>
         </div>
       ) : historyData.length > 0 ? (
-        <div className="space-y-4">
-          {historyData.map((packet) => {
-            const { status, className, icon } = getStatusInfo(packet);
-            const progressPercent = packet.count > 0 ? ((packet.count - packet.remainingCount) / packet.count) * 100 : 0;
+        <div className="history-container">
+          <div className="history-list">
+            {historyData.map((packet) => {
+              const packetStatus = formatPacketStatus(packet.remainingCount, packet.hasClaimed);
+              const progressPercent = calculateProgress(
+                packet.count - packet.remainingCount,
+                packet.count
+              );
+              const claimedCount = packet.count - packet.remainingCount;
 
-            return (
-              <div
-                key={packet.id}
-                className="bg-white bg-opacity-20 backdrop-blur-lg rounded-2xl p-6 shadow-lg hover:bg-opacity-30 transition-all duration-200 cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${className}`}>
-                      {icon}
+              return (
+                <div
+                  key={packet.id}
+                  className={`history-item ${packetStatus.class}`}
+                  onClick={() => handlePacketClick(packet)}
+                >
+                  <div className="history-header">
+                    <span className="packet-id">红包 #{packet.id}</span>
+                    <span className={`packet-status ${packetStatus.class}`}>
+                      {packetStatus.text}
+                    </span>
+                  </div>
+
+                  <div className="history-details">
+                    <div className="detail-item">
+                      <span>类型: {packet.isEqual ? '等额' : '随机'}</span>
+                      <span>总额: {packet.amount} ETH</span>
                     </div>
-                    <div>
-                      <h3 className="text-white font-bold text-lg">红包 #{packet.id}</h3>
-                      <p className="text-white opacity-70 text-sm">
-                        {packet.isEqual ? '等额红包' : '随机红包'}
-                      </p>
+                    <div className="detail-item">
+                      <span>进度: {claimedCount}/{packet.count}</span>
+                      <span>剩余: {packet.remainingAmount} ETH</span>
                     </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${className}`}>
-                    {status}
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                  <div className="text-center">
-                    <div className="text-white text-lg font-bold">{packet.amount}</div>
-                    <div className="text-white opacity-60 text-xs">总金额 (ETH)</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-white text-lg font-bold">{packet.remainingAmount}</div>
-                    <div className="text-white opacity-60 text-xs">剩余金额 (ETH)</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-white text-lg font-bold">{packet.count}</div>
-                    <div className="text-white opacity-60 text-xs">总个数</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-white text-lg font-bold">{packet.remainingCount}</div>
-                    <div className="text-white opacity-60 text-xs">剩余个数</div>
-                  </div>
-                </div>
-
-                {/* 进度条 */}
-                <div className="mb-3">
-                  <div className="flex justify-between text-white text-sm mb-1">
-                    <span>领取进度</span>
-                    <span>{packet.count - packet.remainingCount} / {packet.count}</span>
-                  </div>
-                  <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
+                  {/* 进度条 */}
+                  <div className="progress-bar-small">
                     <div 
-                      className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-500"
+                      className="progress-fill-small"
                       style={{ width: `${progressPercent}%` }}
                     ></div>
                   </div>
-                </div>
 
-                {/* 操作按钮 */}
-                <div className="flex space-x-3">
-                  <button 
-                    className="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 border border-white border-opacity-30 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm"
-                    onClick={() => console.log('查看详情', packet.id)}
-                  >
-                    📋 查看详情
-                  </button>
-                  {packet.remainingCount > 0 && !packet.hasClaimed && (
+                  {/* 操作按钮 */}
+                  <div className="flex space-x-3 mt-3">
                     <button 
-                      className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm"
-                      onClick={() => console.log('立即抢红包', packet.id)}
+                      className="flex-1 btn-enhanced bg-white bg-opacity-20 text-white text-sm py-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePacketClick(packet);
+                      }}
                     >
-                      🎁 立即抢红包
+                      📋 查看详情
                     </button>
-                  )}
+                    {packet.remainingCount > 0 && !packet.hasClaimed && (
+                      <button 
+                        className="flex-1 claim-btn text-sm py-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleClaimPacket(packet.id);
+                        }}
+                      >
+                        🎁 立即抢红包
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       ) : (
         /* 空状态 */
-        <div className="bg-white bg-opacity-20 backdrop-blur-lg rounded-3xl p-12 text-center">
+        <div className="enhanced-card text-center p-12">
           <div className="text-6xl mb-4 opacity-50">📜</div>
           <h3 className="text-white text-xl font-bold mb-2">暂无红包历史</h3>
           <p className="text-white opacity-70 mb-6">
@@ -209,8 +212,80 @@ export default function PacketHistory() {
         </div>
       )}
 
+      {/* 详情弹窗 */}
+      {selectedPacket && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="enhanced-card max-w-md w-full">
+            <div className="red-packet-details">
+              <div className="packet-info-card">
+                <div className="packet-header">
+                  <h4>红包 #{selectedPacket.id}</h4>
+                  <span className="packet-type-badge">
+                    {selectedPacket.isEqual ? '等额红包' : '随机红包'}
+                  </span>
+                </div>
+
+                <div className="packet-stats">
+                  <div className="stat-item">
+                    <span className="stat-label">总金额:</span>
+                    <span className="stat-value">{selectedPacket.amount} ETH</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">剩余金额:</span>
+                    <span className="stat-value">{selectedPacket.remainingAmount} ETH</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">总个数:</span>
+                    <span className="stat-value">{selectedPacket.count}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">剩余个数:</span>
+                    <span className="stat-value">{selectedPacket.remainingCount}</span>
+                  </div>
+                </div>
+
+                <div className="progress-container">
+                  <div className="progress-label">抢红包进度</div>
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill"
+                      style={{ 
+                        width: `${calculateProgress(
+                          selectedPacket.count - selectedPacket.remainingCount,
+                          selectedPacket.count
+                        )}%` 
+                      }}
+                    ></div>
+                  </div>
+                  <div className="progress-text">
+                    {selectedPacket.count - selectedPacket.remainingCount} / {selectedPacket.count}
+                  </div>
+                </div>
+
+                <div className="action-buttons">
+                  {selectedPacket.remainingCount > 0 && !selectedPacket.hasClaimed && (
+                    <button
+                      onClick={() => handleClaimPacket(selectedPacket.id)}
+                      className="claim-btn"
+                    >
+                      🎁 抢红包
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setSelectedPacket(null)}
+                    className="refresh-btn"
+                  >
+                    ❌ 关闭
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 说明信息 */}
-      <div className="mt-8 bg-white bg-opacity-10 rounded-xl p-6">
+      <div className="mt-8 enhanced-card">
         <h4 className="text-white font-medium mb-3 flex items-center">
           <span className="mr-2">💡</span>
           使用说明
