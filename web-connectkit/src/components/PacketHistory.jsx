@@ -1,9 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useContractRead } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contracts/ChaleeDApp';
-import { formatEth, calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
+import { calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
+import { fetchPacketHistory, fetchPacketInfo } from '../utils/blockchain';
 
 export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
+  const { address } = useAccount();
   const [historyData, setHistoryData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,38 +18,6 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
     abi: CONTRACT_ABI,
     functionName: 'packetId',
   });
-
-  // 获取单个红包信息的函数
-  const fetchPacketInfo = useCallback(async (id) => {
-    try {
-      // 这里需要使用合约直接调用，因为 useContractRead 在循环中不适用
-      // 我们可以使用 readContract 从 wagmi/actions
-      const { readContract } = await import('wagmi/actions');
-      
-      const packetInfo = await readContract({
-        address: CONTRACT_ADDRESS,
-        abi: CONTRACT_ABI,
-        functionName: 'getPacketInfo',
-        args: [id],
-      });
-
-      const [isEqual, count, remainingCount, amount, remainingAmount, hasClaimed] = packetInfo;
-      
-      return {
-        id,
-        isEqual: Boolean(isEqual),
-        count: Number(count),
-        remainingCount: Number(remainingCount),
-        amount: formatEth(amount),
-        remainingAmount: formatEth(remainingAmount),
-        hasClaimed: Boolean(hasClaimed),
-        timestamp: Date.now() - Math.random() * 86400000, // 模拟时间戳，实际应该从事件中获取
-      };
-    } catch (error) {
-      debugLog(`获取红包 #${id} 信息失败`, error);
-      return null;
-    }
-  }, []);
 
   // 加载红包历史记录
   const loadHistory = useCallback(async () => {
@@ -60,30 +31,11 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
 
     try {
       const latestId = Number(packetId);
-      const maxHistory = Math.min(latestId, 10); // 最多显示10个红包
+      debugLog('开始加载红包历史', { latestId });
 
-      debugLog('加载红包历史', { latestId, maxHistory });
-
-      const history = [];
+      // 使用新的区块链工具函数批量获取红包历史
+      const history = await fetchPacketHistory(latestId, 10);
       
-      // 并发获取红包信息
-      const promises = [];
-      for (let i = latestId - 1; i >= Math.max(0, latestId - maxHistory); i--) {
-        promises.push(fetchPacketInfo(i));
-      }
-
-      const results = await Promise.all(promises);
-      
-      // 过滤掉获取失败的红包
-      for (const result of results) {
-        if (result) {
-          history.push(result);
-        }
-      }
-
-      // 按ID降序排列（最新的在前面）
-      history.sort((a, b) => b.id - a.id);
-
       setHistoryData(history);
       debugLog('红包历史加载完成', { count: history.length });
     } catch (err) {
@@ -93,7 +45,7 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
     } finally {
       setIsLoading(false);
     }
-  }, [packetId, fetchPacketInfo]);
+  }, [packetId]);
 
   // 当 packetId 变化时自动加载历史记录
   useEffect(() => {
@@ -102,9 +54,17 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
     }
   }, [packetId, loadHistory]);
 
-  const handlePacketClick = (packet) => {
+  const handlePacketClick = async (packet) => {
     setSelectedPacket(packet);
     debugLog('查看红包详情', packet);
+    
+    // 获取最新的红包信息
+    try {
+      const updatedPacket = await fetchPacketInfo(packet.id);
+      setSelectedPacket(updatedPacket);
+    } catch (error) {
+      debugLog('刷新红包详情失败', error);
+    }
   };
 
   const handleClaimPacket = async (packetId) => {
@@ -138,7 +98,7 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
       <div className="text-center mb-8">
         <div className="text-4xl mb-3">📜</div>
         <h2 className="text-3xl font-bold text-white mb-2">红包历史</h2>
-        <p className="text-white opacity-80">查看最近的红包记录</p>
+        <p className="text-white opacity-80">查看最近的红包记录（链上数据）</p>
       </div>
 
       {/* 统计信息 */}
@@ -173,7 +133,7 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
           {isLoading ? (
             <div className="flex items-center space-x-2">
               <div className="loading-spinner"></div>
-              <span>加载中...</span>
+              <span>从区块链加载中...</span>
             </div>
           ) : (
             <>
@@ -275,12 +235,13 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
           <div className="text-6xl mb-4 opacity-50">📜</div>
           <h3 className="text-white text-xl font-bold mb-2">暂无红包历史</h3>
           <p className="text-white opacity-70 mb-6">
-            {Number(packetId) === 0 ? '还没有人创建过红包' : '正在加载历史记录...'}
+            {Number(packetId) === 0 ? '还没有人创建过红包' : '正在从区块链加载历史记录...'}
           </p>
           <div className="space-y-2 text-white text-sm opacity-60">
             <p>💡 创建第一个红包来开始使用</p>
             <p>🎁 红包历史会自动显示在这里</p>
             <p>📊 支持查看最近10个红包的状态</p>
+            <p>⛓️ 数据直接从区块链获取</p>
           </div>
         </div>
       )}
@@ -405,7 +366,13 @@ export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
         
         <div className="mt-4 p-3 bg-yellow-500 bg-opacity-20 rounded-lg">
           <div className="text-yellow-200 text-sm">
-            <strong>📢 注意：</strong>历史记录现在直接从区块链获取真实数据，加载可能需要几秒钟时间。
+            <strong>🎉 增强功能：</strong>现在使用优化的区块链工具函数，支持批量并发获取数据，加载速度更快更稳定！
+          </div>
+        </div>
+        
+        <div className="mt-2 p-3 bg-blue-500 bg-opacity-20 rounded-lg">
+          <div className="text-blue-200 text-sm">
+            <strong>⛓️ 链上数据：</strong>所有红包信息都直接从以太坊区块链获取，确保数据真实可靠。
           </div>
         </div>
       </div>
