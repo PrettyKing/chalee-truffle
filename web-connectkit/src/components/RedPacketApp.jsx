@@ -20,6 +20,7 @@ export default function RedPacketApp() {
     userInfo,
     isOwner,
     packetId,
+    queryError,
     
     // 红包功能
     createRedPacket,
@@ -27,6 +28,7 @@ export default function RedPacketApp() {
     queryRedPacket,
     isCreating,
     isGrabbing,
+    isQueryingPacket,
     createError,
     grabError,
     
@@ -50,6 +52,7 @@ export default function RedPacketApp() {
     
     // 其他
     refreshData,
+    autoQueryLatestPacket,
   } = useRedPacket();
 
   const tabs = [
@@ -72,7 +75,7 @@ export default function RedPacketApp() {
             🧧 Chalee DApp
           </h1>
           <p className="text-white text-xl opacity-90 mb-6">
-            基于以太坊的去中心化红包应用
+            基于以太坊的去中心化红包应用 - 增强版
           </p>
           
           {/* 连接按钮 */}
@@ -143,8 +146,8 @@ export default function RedPacketApp() {
                     info={redPacketInfo}
                     onGrabRedPacket={grabRedPacket}
                     onQueryRedPacket={queryRedPacket}
-                    isLoading={isGrabbing}
-                    error={grabError}
+                    isLoading={isGrabbing || isQueryingPacket}
+                    error={grabError || queryError}
                     packetId={packetId}
                   />
                 </div>
@@ -173,7 +176,10 @@ export default function RedPacketApp() {
               )}
 
               {activeTab === 'history' && (
-                <PacketHistory />
+                <PacketHistory 
+                  onQueryRedPacket={queryRedPacket}
+                  onGrabRedPacket={grabRedPacket}
+                />
               )}
 
               {activeTab === 'owner' && isOwner && (
@@ -202,7 +208,8 @@ export default function RedPacketApp() {
                 <p>✨ 创建和领取红包</p>
                 <p>💰 管理您的ETH余额</p>
                 <p>👤 设置个人信息</p>
-                <p>📜 查看红包历史</p>
+                <p>📜 查看红包历史（真实链上数据）</p>
+                <p>🔍 增强版UI界面和功能</p>
               </div>
             </div>
           </div>
