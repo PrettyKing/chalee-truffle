@@ -1,23 +1,55 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useContractRead } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../contracts/ChaleeDApp';
-import { calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
+import { formatEth, calculateProgress, formatPacketStatus, debugLog } from '../utils/helpers';
 
-export default function PacketHistory() {
+export default function PacketHistory({ onQueryRedPacket, onGrabRedPacket }) {
   const [historyData, setHistoryData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPacket, setSelectedPacket] = useState(null);
 
   // 获取最新红包ID
-  const { data: packetId } = useContractRead({
+  const { data: packetId, refetch: refetchPacketId } = useContractRead({
     address: CONTRACT_ADDRESS,
     abi: CONTRACT_ABI,
     functionName: 'packetId',
   });
 
+  // 获取单个红包信息的函数
+  const fetchPacketInfo = useCallback(async (id) => {
+    try {
+      // 这里需要使用合约直接调用，因为 useContractRead 在循环中不适用
+      // 我们可以使用 readContract 从 wagmi/actions
+      const { readContract } = await import('wagmi/actions');
+      
+      const packetInfo = await readContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'getPacketInfo',
+        args: [id],
+      });
 
-  const loadHistory = async () => {
+      const [isEqual, count, remainingCount, amount, remainingAmount, hasClaimed] = packetInfo;
+      
+      return {
+        id,
+        isEqual: Boolean(isEqual),
+        count: Number(count),
+        remainingCount: Number(remainingCount),
+        amount: formatEth(amount),
+        remainingAmount: formatEth(remainingAmount),
+        hasClaimed: Boolean(hasClaimed),
+        timestamp: Date.now() - Math.random() * 86400000, // 模拟时间戳，实际应该从事件中获取
+      };
+    } catch (error) {
+      debugLog(`获取红包 #${id} 信息失败`, error);
+      return null;
+    }
+  }, []);
+
+  // 加载红包历史记录
+  const loadHistory = useCallback(async () => {
     if (!packetId || Number(packetId) === 0) {
       setHistoryData([]);
       return;
@@ -27,19 +59,30 @@ export default function PacketHistory() {
     setError('');
 
     try {
-      const history = [];
       const latestId = Number(packetId);
       const maxHistory = Math.min(latestId, 10); // 最多显示10个红包
 
       debugLog('加载红包历史', { latestId, maxHistory });
 
-      // 模拟加载历史数据
-      // 在实际应用中，这里应该调用合约的 getPacketInfo 方法
+      const history = [];
+      
+      // 并发获取红包信息
+      const promises = [];
       for (let i = latestId - 1; i >= Math.max(0, latestId - maxHistory); i--) {
-        // 这里应该是实际的合约调用
-        const packetInfo = await contract.getPacketInfo(i);
-        history.push(packetInfo);
+        promises.push(fetchPacketInfo(i));
       }
+
+      const results = await Promise.all(promises);
+      
+      // 过滤掉获取失败的红包
+      for (const result of results) {
+        if (result) {
+          history.push(result);
+        }
+      }
+
+      // 按ID降序排列（最新的在前面）
+      history.sort((a, b) => b.id - a.id);
 
       setHistoryData(history);
       debugLog('红包历史加载完成', { count: history.length });
@@ -50,23 +93,44 @@ export default function PacketHistory() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [packetId, fetchPacketInfo]);
 
+  // 当 packetId 变化时自动加载历史记录
   useEffect(() => {
     if (packetId) {
       loadHistory();
     }
-  }, [packetId]);
+  }, [packetId, loadHistory]);
 
   const handlePacketClick = (packet) => {
     setSelectedPacket(packet);
     debugLog('查看红包详情', packet);
   };
 
-  const handleClaimPacket = (packetId) => {
+  const handleClaimPacket = async (packetId) => {
     debugLog('尝试抢红包', { packetId });
-    // 这里应该调用父组件的抢红包函数
-    console.log('抢红包功能需要在父组件中实现', packetId);
+    try {
+      if (onQueryRedPacket) {
+        // 先查询红包以更新状态
+        await onQueryRedPacket(packetId);
+      }
+      if (onGrabRedPacket) {
+        // 然后抢红包
+        await onGrabRedPacket();
+      }
+      // 抢红包后刷新历史记录
+      setTimeout(() => {
+        loadHistory();
+      }, 3000); // 等待3秒让交易确认
+    } catch (error) {
+      debugLog('抢红包失败', error);
+    }
+  };
+
+  const handleQueryPacket = (packetId) => {
+    if (onQueryRedPacket) {
+      onQueryRedPacket(packetId);
+    }
   };
 
   return (
@@ -76,6 +140,28 @@ export default function PacketHistory() {
         <h2 className="text-3xl font-bold text-white mb-2">红包历史</h2>
         <p className="text-white opacity-80">查看最近的红包记录</p>
       </div>
+
+      {/* 统计信息 */}
+      {packetId && Number(packetId) > 0 && (
+        <div className="enhanced-card mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-white">{Number(packetId)}</div>
+              <div className="text-white opacity-70 text-sm">总红包数</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">{historyData.length}</div>
+              <div className="text-white opacity-70 text-sm">已加载</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {historyData.filter(p => p.remainingCount > 0 && !p.hasClaimed).length}
+              </div>
+              <div className="text-white opacity-70 text-sm">可抢红包</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 刷新按钮 */}
       <div className="text-center mb-6">
@@ -141,6 +227,10 @@ export default function PacketHistory() {
                       <span>进度: {claimedCount}/{packet.count}</span>
                       <span>剩余: {packet.remainingAmount} ETH</span>
                     </div>
+                    <div className="detail-item">
+                      <span>状态: {packet.hasClaimed ? '已参与' : '未参与'}</span>
+                      <span>剩余: {packet.remainingCount} 个</span>
+                    </div>
                   </div>
 
                   {/* 进度条 */}
@@ -157,10 +247,10 @@ export default function PacketHistory() {
                       className="flex-1 btn-enhanced bg-white bg-opacity-20 text-white text-sm py-2"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handlePacketClick(packet);
+                        handleQueryPacket(packet.id);
                       }}
                     >
-                      📋 查看详情
+                      📋 查询详情
                     </button>
                     {packet.remainingCount > 0 && !packet.hasClaimed && (
                       <button 
@@ -225,6 +315,18 @@ export default function PacketHistory() {
                     <span className="stat-label">剩余个数:</span>
                     <span className="stat-value">{selectedPacket.remainingCount}</span>
                   </div>
+                  <div className="stat-item">
+                    <span className="stat-label">参与状态:</span>
+                    <span className={`stat-value ${selectedPacket.hasClaimed ? 'claimed' : 'not-claimed'}`}>
+                      {selectedPacket.hasClaimed ? '已参与' : '未参与'}
+                    </span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">红包状态:</span>
+                    <span className={`stat-value ${formatPacketStatus(selectedPacket.remainingCount, selectedPacket.hasClaimed).class}`}>
+                      {formatPacketStatus(selectedPacket.remainingCount, selectedPacket.hasClaimed).text}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="progress-container">
@@ -246,6 +348,13 @@ export default function PacketHistory() {
                 </div>
 
                 <div className="action-buttons">
+                  <button
+                    onClick={() => handleQueryPacket(selectedPacket.id)}
+                    className="refresh-btn"
+                  >
+                    📋 查询最新状态
+                  </button>
+                  
                   {selectedPacket.remainingCount > 0 && !selectedPacket.hasClaimed && (
                     <button
                       onClick={() => handleClaimPacket(selectedPacket.id)}
@@ -254,6 +363,7 @@ export default function PacketHistory() {
                       🎁 抢红包
                     </button>
                   )}
+                  
                   <button
                     onClick={() => setSelectedPacket(null)}
                     className="refresh-btn"
@@ -288,8 +398,14 @@ export default function PacketHistory() {
               <li>• 显示最近10个红包的详细信息</li>
               <li>• 实时更新红包状态和进度</li>
               <li>• 支持快速查看和参与红包</li>
-              <li>• 自动刷新确保数据最新</li>
+              <li>• 数据直接从区块链获取</li>
             </ul>
+          </div>
+        </div>
+        
+        <div className="mt-4 p-3 bg-yellow-500 bg-opacity-20 rounded-lg">
+          <div className="text-yellow-200 text-sm">
+            <strong>📢 注意：</strong>历史记录现在直接从区块链获取真实数据，加载可能需要几秒钟时间。
           </div>
         </div>
       </div>
