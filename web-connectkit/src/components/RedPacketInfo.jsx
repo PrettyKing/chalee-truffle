@@ -1,139 +1,170 @@
-import { useState } from 'react';
-import { getErrorMessage, calculateProgress, formatPacketStatus } from '../utils/helpers';
+import { useState, useEffect } from 'react';
 
-export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket, isLoading, error, packetId }) {
-  const [inputPacketId, setInputPacketId] = useState('0');
-  const [localError, setLocalError] = useState('');
+export default function RedPacketInfo({ 
+  info, 
+  onGrabRedPacket, 
+  onQueryRedPacket, 
+  isLoading, 
+  error, 
+  packetId 
+}) {
+  const [queryId, setQueryId] = useState(packetId || 0);
+  const [status, setStatus] = useState('');
+  const [currentPacketId, setCurrentPacketId] = useState(0);
+  const [showDetails, setShowDetails] = useState(false);
 
-  const handleQuery = async (e) => {
-    e.preventDefault();
-    setLocalError('');
-
-    const id = parseInt(inputPacketId);
-    if (isNaN(id) || id < 0) {
-      setLocalError('请输入有效的红包ID（大于等于0）');
-      return;
+  // 当packetId变化时自动更新查询ID
+  useEffect(() => {
+    if (packetId > 0) {
+      setQueryId(packetId - 1); // packetId是下一个要创建的ID，所以减1
     }
+  }, [packetId]);
 
-    // 检查红包ID是否在有效范围内
-    if (packetId === 0) {
-      setLocalError('还没有人创建过红包，请先创建红包');
-      return;
-    }
-
-    if (id >= packetId) {
-      setLocalError(`红包ID无效。当前最大红包ID为: ${packetId - 1}`);
+  const handleQuery = async () => {
+    if (isNaN(queryId) || queryId < 0) {
+      setStatus('请输入有效的红包ID');
       return;
     }
 
     try {
-      const success = await onQueryRedPacket(id);
-      if (!success) {
-        setLocalError('查询失败，请检查红包ID是否正确');
-      }
+      setStatus('正在查询红包信息...');
+      await onQueryRedPacket(queryId);
+      setCurrentPacketId(queryId);
+      setShowDetails(true);
+      setStatus('查询成功！');
     } catch (err) {
-      setLocalError(getErrorMessage(err));
+      let errorMessage = err.message;
+      if (errorMessage.includes('Invalid packet ID')) {
+        errorMessage = '红包ID不存在';
+      }
+      setStatus(`查询失败: ${errorMessage}`);
+      setShowDetails(false);
     }
   };
 
   const handleGrab = async () => {
-    setLocalError('');
+    if (currentPacketId < 0) {
+      setStatus('请先查询红包信息');
+      return;
+    }
+
     try {
-      await onGrabRedPacket();
+      setStatus('正在抢红包...');
+      const result = await onGrabRedPacket(currentPacketId);
+      setStatus(`抢红包成功！获得 ${result?.amount || '未知'} ETH`);
+      // 刷新红包状态
+      setTimeout(() => {
+        handleRefresh();
+      }, 1000);
     } catch (err) {
-      setLocalError(getErrorMessage(err));
+      let errorMessage = err.message;
+      if (errorMessage.includes('ACTION_REJECTED')) {
+        errorMessage = '用户拒绝了交易';
+      } else if (errorMessage.includes('No remaining red packets')) {
+        errorMessage = '红包已被抢完';
+      } else if (errorMessage.includes('Already claimed')) {
+        errorMessage = '您已经抢过这个红包了';
+      } else if (errorMessage.includes('Invalid packet ID')) {
+        errorMessage = '红包ID无效';
+      }
+      setStatus(`抢红包失败: ${errorMessage}`);
     }
   };
 
-  const displayError = localError || (error ? getErrorMessage(error) : '');
+  const handleRefresh = async () => {
+    if (currentPacketId >= 0) {
+      await handleQuery();
+    }
+  };
 
-  const canClaim = info && !info.hasClaimed && info.remainingCount > 0 && parseFloat(info.remainingAmount) > 0;
-  const isFinished = info && info.remainingCount === 0;
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleQuery();
+    }
+  };
 
-  const progressPercent = info 
-    ? calculateProgress(info.count - info.remainingCount, info.count)
-    : 0;
+  // 计算进度
+  const getProgress = () => {
+    if (!info || !info.count) return { percent: 0, text: '0 / 0' };
+    
+    const totalCount = parseInt(info.count);
+    const remainingCount = parseInt(info.remainingCount || 0);
+    const claimedCount = totalCount - remainingCount;
+    const percent = totalCount > 0 ? (claimedCount / totalCount) * 100 : 0;
+    
+    return { percent, text: `${claimedCount} / ${totalCount}` };
+  };
 
-  const claimedCount = info ? info.count - info.remainingCount : 0;
-  const packetStatus = info ? formatPacketStatus(info.remainingCount, info.hasClaimed) : null;
+  const progress = getProgress();
+
+  // 判断是否可以抢红包
+  const canClaim = info && 
+    !info.hasClaimed && 
+    parseInt(info.remainingCount || 0) > 0 && 
+    parseFloat(info.remainingAmount || 0) > 0;
 
   return (
-    <div className="enhanced-card">
-      <div className="text-center mb-6">
-        <div className="text-4xl mb-3">🔍</div>
-        <h2 className="text-2xl font-bold text-white mb-2">红包信息</h2>
-        <p className="text-white opacity-80">查询和领取红包</p>
+    <div className="card glass">
+      <h3><span className="card-icon">🎉</span>红包状态</h3>
+
+      {/* 查询红包 */}
+      <div className="input-group">
+        <div className="input-row">
+          <input
+            type="number"
+            value={queryId}
+            onChange={(e) => setQueryId(parseInt(e.target.value) || 0)}
+            onKeyPress={handleKeyPress}
+            placeholder="输入红包ID查询"
+            min="0"
+            disabled={isLoading}
+          />
+          <button 
+            className="btn btn-info"
+            onClick={handleQuery}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="loading-spinner"></span>
+                查询中...
+              </>
+            ) : (
+              '查询红包'
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* 连接状态指示器 */}
-      <div className="connection-status mb-4">
-        <div className={`status-dot ${info ? 'connected' : ''}`}></div>
-        <span className="text-white text-sm">
-          {info ? '红包已查询' : '等待查询红包'}
-        </span>
-      </div>
-
-      {/* 红包状态提示 */}
-      {packetId !== undefined && (
-        <div className="bg-white bg-opacity-10 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between text-white text-sm">
-            <span>当前红包总数:</span>
-            <span className="font-bold">{packetId} 个</span>
-          </div>
-          <div className="flex items-center justify-between text-white text-sm mt-1">
-            <span>可查询ID范围:</span>
-            <span className="font-bold">
-              {packetId > 0 ? `0 - ${packetId - 1}` : '暂无红包'}
-            </span>
-          </div>
+      {/* 状态信息 */}
+      {status && (
+        <div className={`status-message ${
+          status.includes('成功') ? 'status-success' :
+          status.includes('失败') ? 'status-error' :
+          status.includes('正在') ? 'status-info' : 'status-warning'
+        }`}>
+          {status}
         </div>
       )}
 
-      {/* 查询红包 */}
-      <form onSubmit={handleQuery} className="space-y-4 mb-6">
-        <div>
-          <label className="block text-white text-sm font-medium mb-2">
-            红包ID
-          </label>
-          <div className="flex space-x-3">
-            <input
-              type="number"
-              min="0"
-              max={packetId > 0 ? packetId - 1 : 0}
-              value={inputPacketId}
-              onChange={(e) => setInputPacketId(e.target.value)}
-              placeholder={packetId > 0 ? `输入 0-${packetId - 1}` : '暂无红包'}
-              className="input-enhanced flex-1"
-              disabled={packetId === 0}
-            />
-            <button
-              type="submit"
-              disabled={packetId === 0}
-              className="btn-enhanced btn-primary"
-            >
-              查询
-            </button>
-          </div>
-          {packetId === 0 && (
-            <p className="text-yellow-300 text-xs mt-1">
-              💡 还没有红包被创建，请先在左侧创建红包
-            </p>
-          )}
+      {/* 错误显示 */}
+      {error && (
+        <div className="status-message status-error">
+          错误: {error.message || error}
         </div>
-      </form>
+      )}
 
-      {/* 红包详情 - 增强版 */}
-      {info && !info.error ? (
+      {/* 红包详情显示区域 */}
+      {showDetails && info && (
         <div className="red-packet-details">
           <div className="packet-info-card">
             <div className="packet-header">
-              <h4>红包 #{info.id}</h4>
+              <h4>红包 #{currentPacketId}</h4>
               <span className="packet-type-badge">
                 {info.isEqual ? '等额红包' : '随机红包'}
               </span>
             </div>
 
-            {/* 统计信息网格 */}
             <div className="packet-stats">
               <div className="stat-item">
                 <span className="stat-label">总金额:</span>
@@ -157,12 +188,6 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
                   {info.hasClaimed ? '已抢' : '未抢'}
                 </span>
               </div>
-              <div className="stat-item">
-                <span className="stat-label">状态:</span>
-                <span className={`stat-value ${packetStatus?.class}`}>
-                  {packetStatus?.text}
-                </span>
-              </div>
             </div>
 
             {/* 进度条 */}
@@ -170,86 +195,60 @@ export default function RedPacketInfo({ info, onGrabRedPacket, onQueryRedPacket,
               <div className="progress-label">抢红包进度</div>
               <div className="progress-bar">
                 <div 
-                  className="progress-fill"
-                  style={{ width: `${progressPercent}%` }}
+                  className="progress-fill" 
+                  style={{ width: `${progress.percent}%` }}
                 ></div>
               </div>
-              <div className="progress-text">{claimedCount} / {info.count}</div>
+              <div className="progress-text">{progress.text}</div>
             </div>
 
-            {/* 操作按钮 */}
+            {/* 抢红包按钮 */}
             <div className="action-buttons">
-              {canClaim && (
+              {canClaim ? (
                 <button
+                  className="btn btn-success claim-btn"
                   onClick={handleGrab}
                   disabled={isLoading}
-                  className="claim-btn"
                 >
                   {isLoading ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="loading-spinner"></div>
-                      <span>抢红包中...</span>
-                    </div>
+                    <>
+                      <span className="loading-spinner"></span>
+                      抢夺中...
+                    </>
                   ) : (
                     '🎁 抢红包'
                   )}
                 </button>
-              )}
-              
-              {isFinished && (
-                <button
-                  className="claim-btn"
-                  disabled={true}
-                >
+              ) : info.hasClaimed ? (
+                <button className="btn claim-btn" disabled>
+                  ✅ 已抢过
+                </button>
+              ) : parseInt(info.remainingCount || 0) === 0 ? (
+                <button className="btn claim-btn" disabled>
                   😢 红包已抢完
                 </button>
+              ) : (
+                <button className="btn claim-btn" disabled>
+                  ❌ 不可抢取
+                </button>
               )}
-
-              <button
-                onClick={() => onQueryRedPacket(info.id)}
-                className="refresh-btn"
+              
+              <button 
+                className="btn btn-secondary"
+                onClick={handleRefresh}
+                disabled={isLoading}
               >
                 🔄 刷新状态
               </button>
             </div>
           </div>
         </div>
-      ) : info && info.error ? (
-        /* 错误状态显示 */
-        <div className="text-center py-8">
-          <div className="text-6xl mb-4 opacity-50">❌</div>
-          <h3 className="text-white text-xl font-bold mb-4">查询失败</h3>
-          <div className="status-message status-error">
-            {info.error}
-          </div>
-          <p className="text-white opacity-70 text-sm mt-2">
-            请检查网络连接和合约配置
-          </p>
-        </div>
-      ) : (
-        /* 空状态 */
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4 opacity-50">🎁</div>
-          <p className="text-white opacity-70 mb-4">
-            {packetId === 0 
-              ? '还没有红包被创建，请先创建红包' 
-              : '输入红包ID来查询红包信息'
-            }
-          </p>
-          <p className="text-white opacity-50 text-sm">
-            {packetId > 0 
-              ? `当前可查询的红包ID: 0 - ${packetId - 1}`
-              : '创建第一个红包后就可以查询了'
-            }
-          </p>
-        </div>
       )}
 
-      {/* 错误信息 */}
-      {displayError && (
-        <div className="status-message status-error mt-4">
-          <span>❌</span>
-          <span>{displayError}</span>
+      {/* 使用提示 */}
+      {!showDetails && (
+        <div className="status-message status-info" style={{ marginTop: '15px', fontSize: '0.9rem' }}>
+          <strong>提示:</strong> 输入红包ID查询详细信息，或等待新红包创建后自动显示最新红包。
         </div>
       )}
     </div>
