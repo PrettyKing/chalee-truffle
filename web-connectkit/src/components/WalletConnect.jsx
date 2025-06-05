@@ -1,9 +1,11 @@
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectKitButton } from 'connectkit';
 
 export default function WalletConnect() {
   return (
-    <div className="flex justify-center mb-6">
-      <ConnectButton />
-    </div>
+    <ConnectKitButton 
+      theme="auto"
+      showBalance={true}
+      showAvatar={true}
+    />
   );
 }

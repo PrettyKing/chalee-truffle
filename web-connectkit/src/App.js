@@ -1,9 +1,9 @@
-import '@rainbow-me/rainbowkit/styles.css';
+import 'connectkit/styles.css';
 import {
-  getDefaultWallets,
-  RainbowKitProvider,
-} from '@rainbow-me/rainbowkit';
-import { configureChains, createConfig, WagmiConfig } from 'wagmi';
+  ConnectKitProvider,
+  getDefaultConfig,
+} from 'connectkit';
+import { createConfig, WagmiConfig } from 'wagmi';
 import {
   mainnet,
   polygon,
@@ -38,43 +38,64 @@ const localhost = {
   },
 };
 
-const { chains, publicClient } = configureChains(
-  [
-    mainnet, 
-    polygon, 
-    optimism, 
-    arbitrum, 
-    goerli, 
-    sepolia,
-    localhost,
-  ],
-  [
-    alchemyProvider({ apiKey: process.env.REACT_APP_ALCHEMY_ID }),
-    publicProvider()
-  ]
+const config = createConfig(
+  getDefaultConfig({
+    // 您的 dApp 信息
+    appName: 'Chalee DApp - 红包应用',
+    appDescription: '基于以太坊的去中心化红包应用',
+    appUrl: 'https://family.co',
+    appIcon: 'https://family.co/logo.png',
+    
+    // WalletConnect 项目ID
+    walletConnectProjectId: process.env.REACT_APP_PROJECT_ID || 'YOUR_PROJECT_ID',
+    
+    // 链配置
+    chains: [
+      mainnet, 
+      polygon, 
+      optimism, 
+      arbitrum, 
+      goerli, 
+      sepolia,
+      localhost,
+    ],
+    
+    // Provider配置
+    providers: [
+      alchemyProvider({ 
+        apiKey: process.env.REACT_APP_ALCHEMY_ID || 'YOUR_ALCHEMY_ID' 
+      }),
+      publicProvider()
+    ],
+    
+    // 其他选项
+    autoConnect: true,
+  })
 );
-
-const { connectors } = getDefaultWallets({
-  appName: 'Chalee DApp - 红包应用',
-  projectId: process.env.REACT_APP_PROJECT_ID || 'YOUR_PROJECT_ID',
-  chains
-});
-
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors,
-  publicClient
-});
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <WagmiConfig config={wagmiConfig}>
+    <WagmiConfig config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider chains={chains}>
+        <ConnectKitProvider
+          theme="auto"
+          mode="light"
+          options={{
+            initialChainId: 0,
+            // 主题自定义
+            customTheme: {
+              '--ck-connectbutton-font-size': '16px',
+              '--ck-connectbutton-border-radius': '12px',
+              '--ck-connectbutton-color': '#373737',
+              '--ck-connectbutton-background': '#ffffff',
+              '--ck-connectbutton-box-shadow': '0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 6px -1px rgba(0, 0, 0, 0.10)',
+            }
+          }}
+        >
           <RedPacketApp />
-        </RainbowKitProvider>
+        </ConnectKitProvider>
       </QueryClientProvider>
     </WagmiConfig>
   );

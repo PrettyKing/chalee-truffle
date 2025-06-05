@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { ConnectKitButton } from 'connectkit';
 import { useRedPacket } from '../hooks/useRedPacket';
 import CreateRedPacket from './CreateRedPacket';
 import RedPacketInfo from './RedPacketInfo';
@@ -75,12 +75,16 @@ export default function RedPacketApp() {
             🧧 Chalee DApp
           </h1>
           <p className="text-white text-xl opacity-90 mb-6">
-            基于以太坊的去中心化红包应用 - 增强版
+            基于以太坊的去中心化红包应用 - ConnectKit版
           </p>
           
-          {/* 连接按钮 */}
+          {/* ConnectKit 连接按钮 */}
           <div className="flex justify-center mb-6">
-            <ConnectButton />
+            <ConnectKitButton 
+              theme="retro"
+              showBalance={true}
+              showAvatar={true}
+            />
           </div>
 
           {/* 连接状态信息 */}
@@ -209,7 +213,7 @@ export default function RedPacketApp() {
                 <p>💰 管理您的ETH余额</p>
                 <p>👤 设置个人信息</p>
                 <p>📜 查看红包历史（真实链上数据）</p>
-                <p>🔍 增强版UI界面和功能</p>
+                <p>🔍 使用 ConnectKit 的现代化UI界面</p>
               </div>
             </div>
           </div>
