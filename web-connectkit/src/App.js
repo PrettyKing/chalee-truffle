@@ -1,8 +1,9 @@
+import 'connectkit/styles.css';
 import {
   ConnectKitProvider,
   getDefaultConfig,
 } from 'connectkit';
-import { createConfig, WagmiConfig } from 'wagmi';
+import { WagmiProvider, createConfig, http } from 'wagmi';
 import {
   mainnet,
   polygon,
@@ -11,8 +12,6 @@ import {
   goerli,
   sepolia,
 } from 'wagmi/chains';
-import { alchemyProvider } from 'wagmi/providers/alchemy';
-import { publicProvider } from 'wagmi/providers/public';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import RedPacketApp from './components/RedPacketApp';
@@ -59,16 +58,16 @@ const config = createConfig(
       localhost,
     ],
     
-    // Provider配置
-    providers: [
-      alchemyProvider({ 
-        apiKey: process.env.REACT_APP_ALCHEMY_ID || 'YOUR_ALCHEMY_ID' 
-      }),
-      publicProvider()
-    ],
-    
-    // 其他选项
-    autoConnect: true,
+    // Transports 配置 (替代 providers)
+    transports: {
+      [mainnet.id]: http(),
+      [polygon.id]: http(),
+      [optimism.id]: http(),
+      [arbitrum.id]: http(),
+      [goerli.id]: http(),
+      [sepolia.id]: http(),
+      [localhost.id]: http(),
+    },
   })
 );
 
@@ -76,7 +75,7 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <WagmiConfig config={config}>
+    <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider
           theme="auto"
@@ -96,7 +95,7 @@ function App() {
           <RedPacketApp />
         </ConnectKitProvider>
       </QueryClientProvider>
-    </WagmiConfig>
+    </WagmiProvider>
   );
 }
 
