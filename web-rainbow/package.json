@@ -1,11 +1,17 @@
 {
-  "name": "my-rainbowkit-app",
+  "name": "red-packet-dapp",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "基于以太坊的去中心化红包应用前端",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "analyze": "ANALYZE=true npm run build",
+    "clean": "rm -rf .next out dist"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.6",
@@ -19,7 +25,48 @@
   "devDependencies": {
     "@types/node": "^20.14.8",
     "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
     "eslint-config-next": "^15.1.7",
     "typescript": "5.5.4"
-  }
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "web3",
+    "dapp",
+    "red-packet",
+    "crypto",
+    "smart-contract",
+    "nextjs",
+    "react",
+    "rainbowkit",
+    "wagmi"
+  ],
+  "author": {
+    "name": "PrettyKing",
+    "url": "https://github.com/PrettyKing"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrettyKing/chalee-truffle.git",
+    "directory": "web-rainbow"
+  },
+  "bugs": {
+    "url": "https://github.com/PrettyKing/chalee-truffle/issues"
+  },
+  "homepage": "https://github.com/PrettyKing/chalee-truffle/tree/main/web-rainbow#readme"
 }
