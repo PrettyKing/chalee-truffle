@@ -1,4 +1,4 @@
-import { useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi';
+import { useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../abi';
 
 // Hook for reading contract balance
@@ -71,7 +71,7 @@ export const useDeposit = () => {
 
   const { data, write, isLoading: isWriteLoading } = useContractWrite(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
+  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
   });
 
@@ -93,7 +93,7 @@ export const useSetInfo = () => {
 
   const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
+  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
   });
 
@@ -116,7 +116,7 @@ export const useSendRedPacket = () => {
 
   const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
+  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
   });
 
@@ -139,7 +139,7 @@ export const useGetRedPacket = () => {
 
   const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
+  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
   });
 
@@ -162,7 +162,7 @@ export const useWithdraw = () => {
 
   const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
+  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
   });
 
