@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { parseEther, formatEther } from 'viem';
 import { useAccount } from 'wagmi';
-import { usePrepareContractWrite, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { useSimulateContract, useWriteContract, useWaitForTransactionReceipt  } from 'wagmi';
 import { useContractBalance, useContractOwner } from '../hooks/useContract';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../abi';
 import styles from '../styles/DepositWithdraw.module.css';
@@ -17,7 +17,7 @@ export const DepositWithdraw: React.FC = () => {
   const isOwner = address && owner && address.toLowerCase() === owner.toLowerCase();
 
   // Deposit preparation
-  const { config: depositConfig, error: depositPrepareError } = usePrepareContractWrite({
+  const { config: depositConfig, error: depositPrepareError } = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'deposit',
@@ -30,12 +30,12 @@ export const DepositWithdraw: React.FC = () => {
     write: depositWrite, 
     isLoading: isDepositWriteLoading, 
     error: depositWriteError 
-  } = useContractWrite(depositConfig);
+  } = useWriteContract(depositConfig);
 
   const { 
     isLoading: isDepositTransactionLoading, 
     isSuccess: isDepositSuccess 
-  } = useWaitForTransaction({
+  } = useWaitForTransactionReceipt ({
     hash: depositData?.hash,
     onSuccess: () => {
       setDepositAmount('');
@@ -44,7 +44,7 @@ export const DepositWithdraw: React.FC = () => {
   });
 
   // Withdraw preparation
-  const { config: withdrawConfig, error: withdrawPrepareError } = usePrepareContractWrite({
+  const { config: withdrawConfig, error: withdrawPrepareError } = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'withdraw',
@@ -57,12 +57,12 @@ export const DepositWithdraw: React.FC = () => {
     write: withdrawWrite, 
     isLoading: isWithdrawWriteLoading, 
     error: withdrawWriteError 
-  } = useContractWrite(withdrawConfig);
+  } = useWriteContract(withdrawConfig);
 
   const { 
     isLoading: isWithdrawTransactionLoading, 
     isSuccess: isWithdrawSuccess 
-  } = useWaitForTransaction({
+  } = useWaitForTransactionReceipt ({
     hash: withdrawData?.hash,
     onSuccess: () => {
       setWithdrawAmount('');
@@ -71,7 +71,7 @@ export const DepositWithdraw: React.FC = () => {
   });
 
   // Transfer all to owner preparation
-  const { config: transferConfig, error: transferPrepareError } = usePrepareContractWrite({
+  const { config: transferConfig, error: transferPrepareError } = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'transferToOwner',
@@ -83,12 +83,12 @@ export const DepositWithdraw: React.FC = () => {
     write: transferWrite, 
     isLoading: isTransferWriteLoading, 
     error: transferWriteError 
-  } = useContractWrite(transferConfig);
+  } = useWriteContract(transferConfig);
 
   const { 
     isLoading: isTransferTransactionLoading, 
     isSuccess: isTransferSuccess 
-  } = useWaitForTransaction({
+  } = useWaitForTransactionReceipt ({
     hash: transferData?.hash,
     onSuccess: () => {
       refetchBalance();

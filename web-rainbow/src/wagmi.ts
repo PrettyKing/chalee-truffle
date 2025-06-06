@@ -7,6 +7,7 @@ import {
   polygonMumbai,
   bsc,
   bscTestnet,
+  localhost,
 } from 'wagmi/chains';
 
 // 根据环境变量决定是否包含测试网
@@ -17,7 +18,7 @@ const supportedChains = [
   mainnet,
   polygon,
   bsc,
-  ...(includeTestnets ? [goerli, sepolia, polygonMumbai, bscTestnet] : []),
+  ...(includeTestnets ? [goerli, sepolia, polygonMumbai, bscTestnet, localhost] : []),
 ];
 
 // Wagmi 配置
@@ -67,5 +68,10 @@ export const networkConfig = {
     name: 'BSC Testnet',
     color: '#F3BA2F',
     explorerUrl: 'https://testnet.bscscan.com',
+  },
+  [localhost.id]: {
+    name: 'Localhost',
+    color: '#FF0000',
+    explorerUrl: 'http://localhost:7545',
   },
 };

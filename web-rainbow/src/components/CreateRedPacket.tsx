@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { parseEther } from "viem";
 import {
-  usePrepareContractWrite,
-  useContractWrite,
-  useWaitForTransaction,
+  useSimulateContract,
+  useWriteContract,
+  useWaitForTransactionReceipt ,
 } from "wagmi";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../abi";
 import styles from "../styles/CreateRedPacket.module.css";
@@ -20,7 +20,7 @@ export const CreateRedPacket: React.FC<CreateRedPacketProps> = ({
   const [isEqual, setIsEqual] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
 
-  const { config, error: prepareError } = usePrepareContractWrite({
+  const { config, error: prepareError } = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: "sendRedPacket",
@@ -43,9 +43,9 @@ export const CreateRedPacket: React.FC<CreateRedPacketProps> = ({
     write,
     isLoading: isWriteLoading,
     error: writeError,
-  } = useContractWrite(config);
+  } = useWriteContract(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
+  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt ({
     hash: data?.hash,
     onSuccess: (data) => {
       // Extract packet ID from event logs if possible

@@ -1,19 +1,18 @@
-import { useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransactionReceipt } from 'wagmi';
+import { useReadContract, useWriteContract, useSimulateContract, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../abi';
 
 // Hook for reading contract balance
 export const useContractBalance = () => {
-  return useContractRead({
+  return useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
-    functionName: 'getBalance',
-    watch: true,
+    functionName: 'getBalance'
   });
 };
 
 // Hook for reading contract owner
 export const useContractOwner = () => {
-  return useContractRead({
+  return useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'owner',
@@ -22,17 +21,16 @@ export const useContractOwner = () => {
 
 // Hook for reading current packet ID
 export const useCurrentPacketId = () => {
-  return useContractRead({
+  return useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'packetId',
-    watch: true,
   });
 };
 
 // Hook for reading user info
 export const useUserInfo = () => {
-  return useContractRead({
+  return useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'getInfo',
@@ -40,36 +38,44 @@ export const useUserInfo = () => {
 };
 
 // Hook for reading packet info
-export const usePacketInfo = (packetId: number | undefined) => {
-  return useContractRead({
+export const usePacketInfo = (packetId?: number | bigint | string) => {
+  const enabled = packetId !== undefined && packetId !== null;
+  return useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'getPacketInfo',
-    args: packetId ? [BigInt(packetId)] : undefined,
-    enabled: !!packetId,
+    args: enabled ? [typeof packetId === 'bigint' ? packetId : BigInt(packetId!)] : undefined,
   });
 };
 
 // Hook for checking if user has claimed a packet
-export const useHasClaimedPacket = (packetId: number | undefined, userAddress: string | undefined) => {
-  return useContractRead({
+export const useHasClaimedPacket = (
+  packetId?: number | bigint | string,
+  userAddress?: string
+) => {
+  const enabled = !!(packetId && userAddress);
+  return useReadContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'hasClaimedPacket',
-    args: packetId && userAddress ? [BigInt(packetId), userAddress as `0x${string}`] : undefined,
-    enabled: !!(packetId && userAddress),
+    args: enabled
+      ? [
+        typeof packetId === 'bigint' ? packetId : BigInt(packetId!),
+        userAddress as `0x${string}`,
+      ]
+      : undefined,
   });
 };
 
 // Hook for depositing ETH
 export const useDeposit = () => {
-  const { config } = usePrepareContractWrite({
+  const { config }: any = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'deposit',
   });
 
-  const { data, write, isLoading: isWriteLoading } = useContractWrite(config);
+  const { data, write, isLoading: isWriteLoading }: any = useWriteContract(config ?? {});
 
   const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
@@ -85,13 +91,13 @@ export const useDeposit = () => {
 
 // Hook for setting user info
 export const useSetInfo = () => {
-  const { config, error: prepareError } = usePrepareContractWrite({
+  const { config, error: prepareError }: any = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'setInfo',
   });
 
-  const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
+  const { data, write, isLoading: isWriteLoading, error: writeError }: any = useWriteContract(config ?? {});
 
   const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
@@ -108,13 +114,13 @@ export const useSetInfo = () => {
 
 // Hook for creating red packet
 export const useSendRedPacket = () => {
-  const { config, error: prepareError } = usePrepareContractWrite({
+  const { config, error: prepareError }: any = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'sendRedPacket',
   });
 
-  const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
+  const { data, write, isLoading: isWriteLoading, error: writeError }: any = useWriteContract(config ?? {});
 
   const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
@@ -131,13 +137,13 @@ export const useSendRedPacket = () => {
 
 // Hook for claiming red packet
 export const useGetRedPacket = () => {
-  const { config, error: prepareError } = usePrepareContractWrite({
+  const { config, error: prepareError }: any = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'getRedPacket',
   });
 
-  const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
+  const { data, write, isLoading: isWriteLoading, error: writeError }: any = useWriteContract(config ?? {});
 
   const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,
@@ -154,13 +160,13 @@ export const useGetRedPacket = () => {
 
 // Hook for withdrawing (owner only)
 export const useWithdraw = () => {
-  const { config, error: prepareError } = usePrepareContractWrite({
+  const { config, error: prepareError }: any = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: 'withdraw',
   });
 
-  const { data, write, isLoading: isWriteLoading, error: writeError } = useContractWrite(config);
+  const { data, write, isLoading: isWriteLoading, error: writeError }: any = useWriteContract(config ?? {});
 
   const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt({
     hash: data?.hash,

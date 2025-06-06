@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import {
-  usePrepareContractWrite,
-  useContractWrite,
-  useWaitForTransaction,
+  useSimulateContract,
+  useWriteContract,
+  useWaitForTransactionReceipt ,
 } from "wagmi";
 import { usePacketInfo, useHasClaimedPacket } from "../hooks/useContract";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../abi";
@@ -27,7 +27,7 @@ export const ClaimRedPacket: React.FC = () => {
     address
   );
 
-  const { config, error: prepareError } = usePrepareContractWrite({
+  const { config, error: prepareError } = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: "getRedPacket",
@@ -45,9 +45,9 @@ export const ClaimRedPacket: React.FC = () => {
     write,
     isLoading: isWriteLoading,
     error: writeError,
-  } = useContractWrite(config);
+  } = useWriteContract(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
+  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransactionReceipt ({
     hash: data?.hash,
   });
 

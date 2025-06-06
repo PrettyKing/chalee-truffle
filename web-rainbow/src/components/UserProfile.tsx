@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import {
-  usePrepareContractWrite,
-  useContractWrite,
-  useWaitForTransaction,
+  useSimulateContract,
+  useWriteContract,
+  useWaitForTransactionReceipt,
 } from "wagmi";
 import { useUserInfo } from "../hooks/useContract";
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "../abi";
@@ -15,14 +15,17 @@ export const UserProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const { address } = useAccount();
 
-  const { data: userInfo, isLoading: isLoadingInfo, refetch } = useUserInfo();
+  const {
+    data: userInfo,
+    isLoading: isLoadingInfo,
+    refetch,
+  }: any = useUserInfo();
 
-  const { config, error: prepareError } = usePrepareContractWrite({
+  const { config, error: prepareError }: any = useSimulateContract({
     address: CONTRACT_ADDRESS as `0x${string}`,
     abi: CONTRACT_ABI,
     functionName: "setInfo",
     args: [name, age ? BigInt(age) : BigInt(0)],
-    enabled: !!(name && age && parseInt(age) > 0),
   });
 
   const {
@@ -30,15 +33,16 @@ export const UserProfile: React.FC = () => {
     write,
     isLoading: isWriteLoading,
     error: writeError,
-  } = useContractWrite(config);
+  }: any = useWriteContract(config);
 
-  const { isLoading: isTransactionLoading, isSuccess } = useWaitForTransaction({
-    hash: data?.hash,
-    onSuccess: () => {
-      setIsEditing(false);
-      refetch();
-    },
-  });
+  const { isLoading: isTransactionLoading, isSuccess }: any =
+    useWaitForTransactionReceipt({
+      hash: data?.hash,
+      onReplaced: () => {
+        setIsEditing(false);
+        refetch();
+      },
+    });
 
   useEffect(() => {
     if (userInfo && userInfo[0]) {
