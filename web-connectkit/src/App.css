@@ -1,0 +1,12 @@
+/* Custom CSS classes can be added here */
+
+.App {
+  text-align: center;
+}
+
+/* You can add custom Tailwind components here */
+@layer components {
+  .btn-primary {
+    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded;
+  }
+}
