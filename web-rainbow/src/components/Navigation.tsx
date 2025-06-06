@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import styles from '../styles/Navigation.module.css';
 

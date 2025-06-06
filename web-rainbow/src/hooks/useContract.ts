@@ -1,6 +1,5 @@
 import { useContractRead, useContractWrite, usePrepareContractWrite, useWaitForTransaction } from 'wagmi';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../abi';
-import { parseEther, formatEther } from 'viem';
 
 // Hook for reading contract balance
 export const useContractBalance = () => {

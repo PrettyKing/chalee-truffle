@@ -7,8 +7,8 @@ import styles from '../styles/ContractInfo.module.css';
 export const ContractInfo: React.FC = () => {
   const { address } = useAccount();
   const { data: userBalance } = useBalance({ address });
-  const { data: contractBalance, isLoading: isLoadingBalance } = useContractBalance();
-  const { data: owner } = useContractOwner();
+  const { data: contractBalance, isLoading: isLoadingBalance }: any = useContractBalance();
+  const { data: owner }: any = useContractOwner();
   const { data: currentPacketId } = useCurrentPacketId();
 
   const isOwner = address && owner && address.toLowerCase() === owner.toLowerCase();
