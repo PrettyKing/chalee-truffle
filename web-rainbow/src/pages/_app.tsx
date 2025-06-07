@@ -10,6 +10,7 @@ import {
   lightTheme,
 } from "@rainbow-me/rainbowkit";
 import { mainnet, polygon, goerli, sepolia, polygonMumbai } from "wagmi/chains";
+import {config} from "../wagmi";
 
 // 自定义主题
 const customTheme: Theme = {
@@ -69,20 +70,6 @@ const customTheme: Theme = {
   },
 };
 
-// Wagmi 配置
-const config = getDefaultConfig({
-  appName: "Red Packet DApp",
-  projectId:
-    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "your-project-id",
-  chains: [
-    mainnet,
-    polygon,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true"
-      ? [goerli, sepolia, polygonMumbai]
-      : []),
-  ],
-  ssr: true,
-});
 
 const queryClient = new QueryClient();
 
