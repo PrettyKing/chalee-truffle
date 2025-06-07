@@ -1,0 +1,30 @@
+{
+  "name": "chalee-truffle",
+  "version": "1.0.0",
+  "description": "[![Solidity](https://img.shields.io/badge/Solidity-0.8.20-blue.svg)](https://soliditylang.org/)\r [![Truffle](https://img.shields.io/badge/Truffle-Latest-orange.svg)](https://trufflesuite.com/)\r [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)",
+  "main": "truffle-config.js",
+  "scripts": {
+    "compile": "truffle compile",
+    "test": "truffle test",
+    "deploy:dev": "truffle migrate --network development",
+    "deploy:sepolia": "truffle migrate --network sepolia",
+    "deploy:mainnet": "truffle migrate --network mainnet",
+    "deploy:token:sepolia": "DEPLOY_TOKEN=true DEPLOY_EXCHANGE=false DEPLOY_MARKETPLACE=false truffle migrate --network sepolia",
+    "deploy:exchange:sepolia": "DEPLOY_TOKEN=false DEPLOY_EXCHANGE=true DEPLOY_MARKETPLACE=false truffle migrate --network sepolia",
+    "deploy:marketplace:sepolia": "DEPLOY_TOKEN=false DEPLOY_EXCHANGE=false DEPLOY_MARKETPLACE=true truffle migrate --network sepolia",
+    "deploy:custom:token": "truffle exec scripts/selective-deploy.js --token --network sepolia",
+    "deploy:custom:exchange": "truffle exec scripts/selective-deploy.js --exchange --network sepolia",
+    "deploy:custom:marketplace": "truffle exec scripts/selective-deploy.js --marketplace --network sepolia",
+    "deploy:custom:all": "truffle exec scripts/selective-deploy.js --all --network sepolia",
+    "migrate:token": "truffle migrate --f 2 --to 2 --network sepolia",
+    "migrate:exchange": "truffle migrate --f 3 --to 3 --network sepolia",
+    "migrate:marketplace": "truffle migrate --f 4 --to 4 --network sepolia",
+    "migrate:from-exchange": "truffle migrate --f 3 --network sepolia",
+    "redeploy:dev": "truffle migrate --reset --network development",
+    "redeploy:sepolia": "truffle migrate --reset --network sepolia",
+    "verify:sepolia": "truffle run verify CHMToken CHMExchange CourseMarketplace --network sepolia",
+    "interact": "truffle exec scripts/interact.js --network sepolia"
+  },
+  "author": "",
+  "license": "ISC"
+}
