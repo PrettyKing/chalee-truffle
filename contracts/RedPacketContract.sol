@@ -144,7 +144,7 @@ contract RedPacketContract {
                 // 使用改进的随机算法
                 uint256 randomSeed = uint256(keccak256(abi.encodePacked(
                     block.timestamp,
-                    block.prevrandao,
+                    block.difficulty,
                     msg.sender,
                     _packetId,
                     packet.remainingCount
