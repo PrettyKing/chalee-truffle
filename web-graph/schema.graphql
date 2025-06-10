@@ -1,0 +1,10 @@
+type packetCreated @entity(immutable: true) {
+  id: Bytes!
+  packetId: BigInt! # uint256
+  isEqule: Boolean! # bool
+  count: Int! # uint8
+  amount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
