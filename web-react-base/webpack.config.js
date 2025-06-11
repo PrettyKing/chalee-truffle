@@ -21,10 +21,7 @@ const webpackBaseConfig = {
       {
         test: /\.(ts|tsx)$/,
         exclude: /(node_modules)/,
-        use: {
-          // `.swcrc` can be used to configure swc
-          loader: "swc-loader",
-        },
+        use: { loader: "swc-loader"},
       },
       {
         test: /\.css$/i,
