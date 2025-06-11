@@ -1,0 +1,7 @@
+onlyBuiltDependencies:
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - bufferutil
+  - keccak
+  - unrs-resolver
+  - utf-8-validate
