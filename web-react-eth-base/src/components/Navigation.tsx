@@ -7,8 +7,8 @@ interface NavigationProps {
 
 export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: 'transaction', label: '转账', icon: '📊' },
-    { id: 'sendData', label: '数据上链', icon: '💰' },
+    { id: 'transaction', label: '0Address转账', icon: '📊' },
+    { id: 'contractsLog', label: '合约日志', icon: '💰' },
     { id: 'dataHistory', label: '数据历史', icon: '💳' },
   ];
 

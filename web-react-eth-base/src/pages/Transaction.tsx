@@ -1,5 +1,7 @@
-import { useSendTransaction, useAccount, useBalance } from 'wagmi';
+import { useSendTransaction, useAccount, useBalance, useTransactionReceipt } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
+import { useState } from 'react';
+
 // 向0地址转装、向合约转账
 export const Transaction: React.FC = () => {
   return (
@@ -12,10 +14,17 @@ export const Transaction: React.FC = () => {
 function SendTransaction() {
   const { address } = useAccount();
   const { data: balance } = useBalance({ address });
-  const { sendTransactionAsync } = useSendTransaction();
+  const { sendTransactionAsync, isPending, isSuccess } = useSendTransaction();
+  const [hex, setHex] = useState<`0x${string}` | undefined>(undefined);
+
+  const { isLoading: isReceiptLoading, data: receiptData } = useTransactionReceipt({ hash: hex });
 
   const onsubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!address) {
+      alert('请先连接钱包！');
+      return;
+    }
     const formData = new FormData(event.currentTarget);
     const recipient = formData.get('recipient') as `0x${string}`;
     const amount = formData.get('amount') as string;
@@ -27,10 +36,7 @@ function SendTransaction() {
         value: parsedAmount,
         ...(data ? { data: stringToHex(data) } : {}),
       });
-      console.log('Transaction sent:', tx);
-      // setTransitionHex(tx);
-      console.log('Transaction receipt:', data);
-
+      setHex(tx as `0x${string}`); 
     } catch (error) {
       console.error('Transaction failed:', error);
       alert('交易失败，请检查输入信息。');
@@ -39,7 +45,7 @@ function SendTransaction() {
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">发送以太币</h2>
+      <h2 className="text-xl font-semibold mb-4">直接像zeroaddress转向0eth gas费方式数据上链</h2>
       <p className="text-gray-600 mb-4">
         当前余额: {balance ? formatEther(balance.value) : '加载中...'} ETH
       </p>
@@ -53,6 +59,7 @@ function SendTransaction() {
             id="recipient"
             name="recipient"
             required
+            disabled={true}
             defaultValue={'0x0000000000000000000000000000000000000000'}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="0x..."
@@ -68,8 +75,10 @@ function SendTransaction() {
             name="amount"
             required
             step="0.01"
+            disabled={true}
+            defaultValue={0}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="0.01"
+            placeholder="0"
           />
         </div>
         <div className="mb-4">
@@ -86,10 +95,32 @@ function SendTransaction() {
         </div>
         <button
           type="submit"
-          className={`w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md transition-colors duration-200`}
+          disabled={isPending || isReceiptLoading}
+          className={`w-full px-4 py-2 text-white font-semibold rounded-md focus:outline-none ${
+            isPending || isReceiptLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
         >
-          发送交易
+          {isPending || isReceiptLoading ? '发送中...' : '发送交易'}
         </button>
+        {isReceiptLoading ? (
+          <p className="mt-4 text-gray-500">正在等待交易确认...</p>
+        ) : receiptData ? (
+          <p className="mt-4 text-green-600">
+            交易已确认！交易哈希:{' '}
+            <a
+              href={`https://sepolia.etherscan.io/tx/${hex}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {hex}
+            </a>
+          </p>
+        ) : (
+          <p className="mt-4 text-gray-500">
+            {hex ? `交易哈希: ${hex}` :''}
+          </p>
+        )}
       </form>
     </div>
   );
@@ -101,4 +132,14 @@ function stringToHex(str: string): `0x${string}` {
     .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
     .join('');
   return ('0x' + hex) as `0x${string}`; // 确保返回类型符合 `0x` 前缀的十六进制字符串格式
+}
+// // 十六进制转字符串
+function hexToString(hex: `0x${string}`): string {
+  return (
+    hex
+      .replace(/^0x/, '')
+      .match(/.{1,2}/g)
+      ?.map(byte => String.fromCharCode(parseInt(byte, 16)))
+      .join('') || ''
+  );
 }

@@ -5,7 +5,7 @@ import { sepolia, mainnet, polygon, optimism, arbitrum, base } from 'wagmi/chain
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { Navigation } from '@/components/Navigation';
 import { useState } from 'react';
-import { SendData } from './SendData';
+import { ContractsLog } from './ContractsLog';
 import { Transaction } from './Transaction';
 import { DataHistory } from './DataHistory';
 
@@ -24,8 +24,8 @@ const App = () => {
     switch (activeTab) {
       case 'transaction':
         return <Transaction />;
-      case 'sendData':
-        return <SendData />;
+      case 'contractsLog':
+        return <ContractsLog />;
       case 'dataHistory':
         return <DataHistory />;
       default:
@@ -44,8 +44,8 @@ const App = () => {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <Navigation activeTab="transaction" onTabChange={setActiveTab} />
-          <div className="min-h-screen bg-gray-50">
+          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+          <div className="bg-gray-50">
             <main className="py-8">{renderContent()}</main>
           </div>
         </RainbowKitProvider>
