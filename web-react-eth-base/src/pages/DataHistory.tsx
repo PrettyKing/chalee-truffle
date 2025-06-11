@@ -1,16 +1,14 @@
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { gql, request } from 'graphql-request';
 
-const query = gql`
-  {
-    messageReceiveds(first: 5) {
-      id
-      messageId
-      sender
-      contentHash
-    }
+const query = gql`{
+  packetCreateds(first: 5) {
+    id
+    packetId
+    isEqule
+    count
   }
-`;
+}`
 // const url = 'https://api.studio.thegraph.com/query/113598/message-storage/version/latest';
 const url = 'https://api.studio.thegraph.com/query/113598/web-graph/version/latest'
 const headers = { Authorization: 'Bearer 157ed63c453c24d03dfc12e849378b3e' };
@@ -24,12 +22,12 @@ const queryClient = new QueryClient({
 });
 
 export const DataHistory: React.FC = () => {
-  const { data, status } = useQuery({
+ const { data, status } = useQuery({
     queryKey: ['data'],
     async queryFn() {
-      return await request(url, query, {}, headers);
-    },
-  });
+      return await request(url, query, {}, headers)
+    }
+  })
 
   return (
     <QueryClientProvider client={queryClient}>
