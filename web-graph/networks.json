@@ -1,7 +1,7 @@
 {
   "mainnet": {
-    "Contract": {
-      "address": "0x1bfbdf1dc365c509b6cd99a25e1bc42440783dc1",
+    "LogChain": {
+      "address": "0x753e2c96bb4814bfa63572d828fd5160975f8f86",
       "startBlock": 0
     }
   }

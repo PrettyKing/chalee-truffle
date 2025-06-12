@@ -2,15 +2,20 @@ import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-quer
 import { gql, request } from 'graphql-request';
 
 const query = gql`{
-  packetCreateds(first: 5) {
+  dataReceiveds(first: 5) {
     id
-    packetId
-    isEqule
-    count
+    data
+    sender
+    value
+  }
+  logs(first: 5) {
+    id
+    data
+    blockNumber
+    blockTimestamp
   }
 }`
-// const url = 'https://api.studio.thegraph.com/query/113598/message-storage/version/latest';
-const url = 'https://api.studio.thegraph.com/query/113598/web-graph/version/latest'
+const url = 'https://api.studio.thegraph.com/query/113598/log-chain/version/latest'
 const headers = { Authorization: 'Bearer 157ed63c453c24d03dfc12e849378b3e' };
 
 const queryClient = new QueryClient({
