@@ -29,7 +29,7 @@ function SendTransaction() {
     const recipient = formData.get('recipient') as `0x${string}`;
     const amount = formData.get('amount') as string;
     const data = formData.get('data') as `0x${string}` | undefined;
-    const parsedAmount = parseEther(amount);
+    const parsedAmount = parseEther(amount || '0');
     try {
       const tx = await sendTransactionAsync({
         to: recipient,
