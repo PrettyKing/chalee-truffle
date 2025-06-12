@@ -1,9 +1,16 @@
-type packetCreated @entity(immutable: true) {
+type DataReceived @entity(immutable: true) {
   id: Bytes!
-  packetId: BigInt! # uint256
-  isEqule: Boolean! # bool
-  count: Int! # uint8
-  amount: BigInt! # uint256
+  data: String! # string
+  sender: Bytes! # address
+  value: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Log @entity(immutable: true) {
+  id: Bytes!
+  data: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!

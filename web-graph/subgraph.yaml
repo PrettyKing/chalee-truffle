@@ -5,22 +5,25 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: Contract
+    name: LogChain
     network: mainnet
     source:
-      address: "0x1bfbdf1dc365c509b6cd99a25e1bc42440783dc1"
-      abi: Contract
+      address: "0x753e2c96bb4814bfa63572d828fd5160975f8f86"
+      abi: LogChain
       startBlock: 0
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
       language: wasm/assemblyscript
       entities:
-        - packetCreated
+        - DataReceived
+        - Log
       abis:
-        - name: Contract
-          file: ./abis/Contract.json
+        - name: LogChain
+          file: ./abis/LogChain.json
       eventHandlers:
-        - event: packetCreated(uint256,indexed bool,indexed uint8,indexed uint256)
-          handler: handlepacketCreated
-      file: ./src/contract.ts
+        - event: DataReceived(string,address,uint256)
+          handler: handleDataReceived
+        - event: Log(string)
+          handler: handleLog
+      file: ./src/log-chain.ts

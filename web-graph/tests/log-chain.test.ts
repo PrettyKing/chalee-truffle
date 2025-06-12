@@ -6,28 +6,24 @@ import {
   beforeAll,
   afterAll
 } from "matchstick-as/assembly/index"
-import { BigInt } from "@graphprotocol/graph-ts"
-import { packetCreated } from "../generated/schema"
-import { packetCreated as packetCreatedEvent } from "../generated/Contract/Contract"
-import { handlepacketCreated } from "../src/contract"
-import { createpacketCreatedEvent } from "./contract-utils"
+import { Address, BigInt } from "@graphprotocol/graph-ts"
+import { DataReceived } from "../generated/schema"
+import { DataReceived as DataReceivedEvent } from "../generated/LogChain/LogChain"
+import { handleDataReceived } from "../src/log-chain"
+import { createDataReceivedEvent } from "./log-chain-utils"
 
 // Tests structure (matchstick-as >=0.5.0)
 // https://thegraph.com/docs/en/subgraphs/developing/creating/unit-testing-framework/#tests-structure
 
 describe("Describe entity assertions", () => {
   beforeAll(() => {
-    let packetId = BigInt.fromI32(234)
-    let isEqule = "boolean Not implemented"
-    let count = 123
-    let amount = BigInt.fromI32(234)
-    let newpacketCreatedEvent = createpacketCreatedEvent(
-      packetId,
-      isEqule,
-      count,
-      amount
+    let data = "Example string value"
+    let sender = Address.fromString(
+      "0x0000000000000000000000000000000000000001"
     )
-    handlepacketCreated(newpacketCreatedEvent)
+    let value = BigInt.fromI32(234)
+    let newDataReceivedEvent = createDataReceivedEvent(data, sender, value)
+    handleDataReceived(newDataReceivedEvent)
   })
 
   afterAll(() => {
@@ -37,32 +33,26 @@ describe("Describe entity assertions", () => {
   // For more test scenarios, see:
   // https://thegraph.com/docs/en/subgraphs/developing/creating/unit-testing-framework/#write-a-unit-test
 
-  test("packetCreated created and stored", () => {
-    assert.entityCount("packetCreated", 1)
+  test("DataReceived created and stored", () => {
+    assert.entityCount("DataReceived", 1)
 
     // 0xa16081f360e3847006db660bae1c6d1b2e17ec2a is the default address used in newMockEvent() function
     assert.fieldEquals(
-      "packetCreated",
+      "DataReceived",
       "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "packetId",
-      "234"
+      "data",
+      "Example string value"
     )
     assert.fieldEquals(
-      "packetCreated",
+      "DataReceived",
       "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "isEqule",
-      "boolean Not implemented"
+      "sender",
+      "0x0000000000000000000000000000000000000001"
     )
     assert.fieldEquals(
-      "packetCreated",
+      "DataReceived",
       "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "count",
-      "123"
-    )
-    assert.fieldEquals(
-      "packetCreated",
-      "0xa16081f360e3847006db660bae1c6d1b2e17ec2a-1",
-      "amount",
+      "value",
       "234"
     )
 
