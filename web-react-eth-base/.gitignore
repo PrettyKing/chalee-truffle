@@ -24,3 +24,6 @@ changelog.generated.md
 
 # temp file
 packages/vant/README.md
+
+# config
+src/config/*.local.js

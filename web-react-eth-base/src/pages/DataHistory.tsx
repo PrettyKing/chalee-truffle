@@ -1,21 +1,22 @@
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { gql, request } from 'graphql-request';
+import { THEGRAP_KEY } from '@/config/constant.env.local';
 
 const query = gql`
   {
-  dataReceiveds(first: 10, orderBy: blockTimestamp, orderDirection: desc) {
-    id
-    data
-    sender
-    value
-    blockNumber
-    blockTimestamp
-    transactionHash
+    dataReceiveds(first: 10, orderBy: blockTimestamp, orderDirection: desc) {
+      id
+      data
+      sender
+      value
+      blockNumber
+      blockTimestamp
+      transactionHash
+    }
   }
-}
 `;
 const url = 'https://api.studio.thegraph.com/query/113598/log-chain/version/latest';
-const headers = { Authorization: 'Bearer 157ed63c453c24d03dfc12e849378b3e' };
+const headers = { Authorization: `Bearer ${THEGRAP_KEY}` };
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,7 +50,12 @@ export const DataHistory: React.FC = () => {
               {new Date(item.blockTimestamp * 1000).toLocaleString()} <br />
               <strong>Transaction Hash:</strong> {item.transactionHash} <br />
               <strong>ID:</strong> {item.id} <br />
-              <a className='text-blue-500' href={`https://sepolia.etherscan.io//tx/${item.transactionHash}`} target="_blank" rel="noopener noreferrer">
+              <a
+                className="text-blue-500"
+                href={`https://sepolia.etherscan.io//tx/${item.transactionHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 View on Etherscan
               </a>
             </div>
