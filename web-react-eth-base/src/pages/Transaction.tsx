@@ -1,8 +1,7 @@
 import { useSendTransaction, useAccount, useBalance, useTransactionReceipt } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
+import { parseEther } from 'viem';
 import { useState } from 'react';
 
-// 向0地址转装、向合约转账
 export const Transaction: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -13,8 +12,7 @@ export const Transaction: React.FC = () => {
 
 function SendTransaction() {
   const { address } = useAccount();
-  const { data: balance } = useBalance({ address });
-  const { sendTransactionAsync, isPending, isSuccess } = useSendTransaction();
+  const { sendTransactionAsync, isPending } = useSendTransaction();
   const [hex, setHex] = useState<`0x${string}` | undefined>(undefined);
 
   const { isLoading: isReceiptLoading, data: receiptData } = useTransactionReceipt({ hash: hex });
@@ -46,9 +44,6 @@ function SendTransaction() {
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h2 className="text-xl font-semibold mb-4">直接像zeroaddress转向0eth gas费方式数据上链</h2>
-      <p className="text-gray-600 mb-4">
-        当前余额: {balance ? formatEther(balance.value) : '加载中...'} ETH
-      </p>
       <form onSubmit={onsubmit}>
         <div className="mb-4">
           <label htmlFor="recipient" className="block text-sm font-medium text-gray-700 mb-2">
