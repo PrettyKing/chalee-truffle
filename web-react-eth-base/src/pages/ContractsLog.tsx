@@ -16,7 +16,8 @@ export const ContractsLog = () => {
     isPending: isWriteLoading,
   } = useWriteContract();
 
-  const { isLoading: isTransactionLoading, isSuccess: isTransactionSuccess } = useWaitForTransactionReceipt({hash: writeData});
+  const { isLoading: isTransactionLoading, isSuccess: isTransactionSuccess } =
+    useWaitForTransactionReceipt({ hash: writeData });
 
   const handleSubmit = async () => {
     if (!inputData.trim()) {
@@ -40,7 +41,7 @@ export const ContractsLog = () => {
       console.error('交易失败:', error);
     }
   };
-  
+
   const handleDirectTransfer = async () => {
     if (!isConnected) {
       alert('请先连接钱包');
@@ -55,11 +56,13 @@ export const ContractsLog = () => {
       // 使用 window.ethereum 直接发送交易
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
-        params: [{
-          from: address,
-          to: CONTRACT_ADDRESS,
-          value: '0x' + parseEther(ethAmount).toString(16),
-        }],
+        params: [
+          {
+            from: address,
+            to: CONTRACT_ADDRESS,
+            value: '0x' + parseEther(ethAmount).toString(16),
+          },
+        ],
       });
       console.log('Direct transfer transaction:', txHash);
     } catch (error) {
@@ -124,6 +127,34 @@ export const ContractsLog = () => {
             交易成功! 数据已上链存储
           </div>
         )}
+      </div>
+      <div className="bg-white rounded-lg shadow-xl p-6">
+        <h2 className="text-xl font-semibold mb-4">
+          通过向合约地址直接转账处罚receive回调函数的方式上链数据
+        </h2>
+        <div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">转账金额 (ETH)</label>
+            <input
+              type="number"
+              step="0.001"
+              value={ethAmount}
+              onChange={e => setEthAmount(e.target.value)}
+              placeholder="0.001"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+          </div>
+          <p className="text-sm text-gray-600 py-2">
+            直接向合约转账会触发 receive 函数，自动存储 "ETH received" 消息
+          </p>
+          <button
+            onClick={handleDirectTransfer}
+            disabled={!isConnected}
+            className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium"
+          >
+            直接转账
+          </button>
+        </div>
       </div>
     </div>
   );
