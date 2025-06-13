@@ -1,4 +1,4 @@
-export const LogChainAbi = [
+export const LOGCHAIN_ABI = [
   {
     anonymous: false,
     inputs: [
@@ -124,4 +124,4 @@ export const LogChainAbi = [
   },
 ];
 
-export const CONTRACTS = '0x753e2c96bb4814bfa63572d828fd5160975f8f86';
+export const CONTRACT_ADDRESS = '0x753e2c96bb4814bfa63572d828fd5160975f8f86';
