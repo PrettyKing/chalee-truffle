@@ -9,8 +9,7 @@ import {
   useWatchContractEvent,
   useBalance,
 } from 'wagmi';
-import { metaMask } from 'wagmi/connectors';
-import { parseEther, formatEther } from 'viem';
+import { parseEther } from 'viem';
 import { CONTRACT_ADDRESS, LOGCHAIN_ABI } from '../abis/LogChain';
 
 export const ContractsLog = () => {
@@ -20,13 +19,7 @@ export const ContractsLog = () => {
   const [contractAddress, setContractAddress] = useState<`0x${string}`>(CONTRACT_ADDRESS);
 
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
 
-  // 获取账户余额
-  const { data: balance } = useBalance({
-    address: address,
-  });
 
   // 获取合约中的数据数量
   const { data: dataCount, refetch: refetchCount } = useReadContract({
