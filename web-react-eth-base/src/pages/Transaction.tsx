@@ -21,6 +21,9 @@ function SendTransaction() {
   const { sendTransactionAsync, isPending } = useSendTransaction();
   const [hex, setHex] = useState<`0x${string}` | undefined>(undefined);
 
+  const [inputHex, setInputHex] = useState<`0x${string}` | undefined>(undefined);
+  const [parseHex, setParseHex] = useState<string>('');
+
   const { isLoading: isReceiptLoading, data: receiptData } = useTransactionReceipt({ hash: hex });
 
   const onsubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -127,6 +130,32 @@ function SendTransaction() {
           <p className="mt-4 text-gray-500">{hex ? `交易哈希: ${hex}` : ''}</p>
         )}
       </form>
+      <div className="mt-4">
+        <input
+          type="text"
+          value={inputHex}
+          onChange={e => setInputHex(e.target.value as `0x${string}`)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="输入十六进制数据 (0x...)"
+        />
+        <button
+          onClick={() => {
+            if (inputHex) {
+              setParseHex(hexToString(inputHex));
+            }
+          }}
+          className="mt-2 w-full px-4 py-2 bg-green-600 text-white font-semibold rounded-md focus:outline-none hover:bg-green-700"
+          disabled={!inputHex}
+        >
+          解析十六进制数据
+        </button>
+        {parseHex && (
+          <div className="mt-2 p-4 bg-gray-100 rounded-md">
+            <h3 className="text-sm font-semibold mb-2">解析结果:</h3>
+            <p className="text-gray-700">{parseHex}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -142,11 +171,10 @@ const stringToHex = (str: string): `0x${string}` => {
 };
 // // 十六进制转字符串
 function hexToString(hex: `0x${string}`): string {
-  return (
-    hex
-      .replace(/^0x/, '')
-      .match(/.{1,2}/g)
-      ?.map(byte => String.fromCharCode(parseInt(byte, 16)))
-      .join('') || ''
+  const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
+  const bytes = new Uint8Array(
+    cleanHex.match(/.{1,2}/g)?.map((byte:any) => parseInt(byte, 16)) || []
   );
+  const decoder = new TextDecoder('utf-8');
+  return decoder.decode(bytes);
 }
