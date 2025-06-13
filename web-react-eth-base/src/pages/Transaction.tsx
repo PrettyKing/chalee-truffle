@@ -2,6 +2,12 @@ import { useSendTransaction, useAccount, useBalance, useTransactionReceipt } fro
 import { parseEther } from 'viem';
 import { useState } from 'react';
 
+export interface ITxParams {
+  to: `0x${string}`;
+  value?: bigint;
+  data?: `0x${string}`;
+}
+
 export const Transaction: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -29,12 +35,16 @@ function SendTransaction() {
     const data = formData.get('data') as `0x${string}` | undefined;
     const parsedAmount = parseEther(amount || '0');
     try {
-      const tx = await sendTransactionAsync({
-        to: recipient,
+      const txParams: ITxParams = {
+        to: recipient || '0x0000000000000000000000000000000000000000',
         value: parsedAmount,
-        ...(data ? { data: stringToHex(data) } : {}),
-      });
-      setHex(tx as `0x${string}`); 
+      };
+      if (data && data.trim()) {
+        txParams.data = stringToHex(data.trim() as string);
+      }
+      console.log('Transaction parameters:', txParams);
+      const tx = await sendTransactionAsync(txParams);
+      setHex(tx as `0x${string}`);
     } catch (error) {
       console.error('Transaction failed:', error);
       alert('交易失败，请检查输入信息。');
@@ -92,7 +102,9 @@ function SendTransaction() {
           type="submit"
           disabled={isPending || isReceiptLoading}
           className={`w-full px-4 py-2 text-white font-semibold rounded-md focus:outline-none ${
-            isPending || isReceiptLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+            isPending || isReceiptLoading
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
           }`}
         >
           {isPending || isReceiptLoading ? '发送中...' : '发送交易'}
@@ -112,9 +124,7 @@ function SendTransaction() {
             </a>
           </p>
         ) : (
-          <p className="mt-4 text-gray-500">
-            {hex ? `交易哈希: ${hex}` :''}
-          </p>
+          <p className="mt-4 text-gray-500">{hex ? `交易哈希: ${hex}` : ''}</p>
         )}
       </form>
     </div>
@@ -122,12 +132,14 @@ function SendTransaction() {
 }
 
 // 字符串转十六进制
-function stringToHex(str: string): `0x${string}` {
-  const hex = Array.from(str)
-    .map(char => char.charCodeAt(0).toString(16).padStart(2, '0'))
+const stringToHex = (str: string): `0x${string}` => {
+  const encoder = new TextEncoder();
+  const bytes = encoder.encode(str);
+  const hex = Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
     .join('');
-  return ('0x' + hex) as `0x${string}`; // 确保返回类型符合 `0x` 前缀的十六进制字符串格式
-}
+  return `0x${hex}`;
+};
 // // 十六进制转字符串
 function hexToString(hex: `0x${string}`): string {
   return (

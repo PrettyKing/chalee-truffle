@@ -7,7 +7,7 @@ export const ContractsLog = () => {
   const [inputData, setInputData] = useState('');
   const [ethAmount, setEthAmount] = useState('0');
 
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
 
   const {
     writeContract,
@@ -38,6 +38,32 @@ export const ContractsLog = () => {
       });
     } catch (error) {
       console.error('交易失败:', error);
+    }
+  };
+  
+  const handleDirectTransfer = async () => {
+    if (!isConnected) {
+      alert('请先连接钱包');
+      return;
+    }
+    if (!ethAmount || parseFloat(ethAmount) <= 0) {
+      alert('请输入有效的ETH金额');
+      return;
+    }
+
+    try {
+      // 使用 window.ethereum 直接发送交易
+      const txHash = await window.ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: address,
+          to: CONTRACT_ADDRESS,
+          value: '0x' + parseEther(ethAmount).toString(16),
+        }],
+      });
+      console.log('Direct transfer transaction:', txHash);
+    } catch (error) {
+      console.error('Direct transfer failed:', error);
     }
   };
 
